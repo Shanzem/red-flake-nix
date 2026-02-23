@@ -191,8 +191,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    #ucc.url = "github:nanomatters/ucc/c087b25ee3460958ae35e6021f86e72b7e44bc80";
-    ucc.url = "github:Mag1cByt3s/ucc/f2b6510c2605ea26ddc7d2698e061808b35c4d91";
+    ucc.url = "github:nanomatters/ucc/ba583597e92129891a8fec451d3a39ec9d25ac79";
+    #ucc.url = "github:Mag1cByt3s/ucc/f2b6510c2605ea26ddc7d2698e061808b35c4d91";
   };
 
   outputs =
