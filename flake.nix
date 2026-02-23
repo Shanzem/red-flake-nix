@@ -204,6 +204,7 @@
       redflake-packages
     , ucc
     , darkmatter-grub-theme
+    , cachynix
     , tuxedo-nixos
     , spicetify-nix
     , ...
@@ -422,6 +423,7 @@
                 redflake-packages.nixosModules.bloodhound-ce
                 darkmatter-grub-theme.nixosModule
                 inputs.impermanence.nixosModules.impermanence
+                cachynix.nixosModules.default
                 #binaryninja.nixosModules.binaryninja
                 (mkHost.mkHost profile hostConfig {
                   inherit hostname localeProfile;

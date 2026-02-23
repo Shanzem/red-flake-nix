@@ -5,8 +5,6 @@
     # enable ZFS encryption
     zfs.encryption = true;
 
-    kernel.cachyos.mArch = "GENERIC_V3";
-
     # set display resolution to 1080p
     display.resolution = "1080p";
 

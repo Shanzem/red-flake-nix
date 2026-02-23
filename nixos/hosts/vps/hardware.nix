@@ -5,7 +5,6 @@
     # disable ZFS encryption
     zfs.encryption = lib.mkForce false;
 
-    kernel.cachyos.mArch = "GENERIC_V3";
   };
 
   boot = {

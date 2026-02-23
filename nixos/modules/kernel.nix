@@ -38,8 +38,7 @@ let
     };
   };
 
-  cachyKernel =
-    (cachyPkgs.linuxPackages_cachyos-lto.cachyOverride { inherit (cfg.cachyos) mArch; }).kernel;
+  cachyKernel = cachyPkgs.linuxPackages_cachyos-gcc.kernel;
 
   cachyBaseKernelPackages = pkgs.linuxPackagesFor cachyKernel;
 
@@ -72,17 +71,6 @@ in
       ];
       default = "cachyos";
       description = "Kernel flavor to use system-wide by default.";
-    };
-
-    cachyos = {
-      mArch = lib.mkOption {
-        type = lib.types.str;
-        default = "GENERIC";
-        description = ''
-          CachyOS kernel micro-architecture (CachyNix `cachyOverride.mArch`).
-          WARNING: `GENERIC_V3` requires an x86-64-v3 capable CPU.
-        '';
-      };
     };
 
     nvidia.stripFix.enable = lib.mkOption {
