@@ -67,19 +67,14 @@ _:
     "vm.vfs_cache_pressure" = 10;
 
     # Use byte-based limits for 96 GB RAM (avoids huge % thresholds)
-    # Background flusher starts at ~1.5 GiB dirty (smooth, low-burst on ZFS/NVMe).
-    # Foreground throttle at ~4 GiB (prevents stalls without aggressive writes).
-    # Disable ratios when using bytes.
-    "vm.dirty_background_bytes" = 1610612736; # 1.5 GiB
-    "vm.dirty_bytes" = 4294967296; # 4 GiB
-    "vm.dirty_background_ratio" = 0;
-    "vm.dirty_ratio" = 0;
+    # Tighter dirty page flushing: prevents I/O bursts during Plasma animations
+    "vm.dirty_background_bytes" = 268435456; # 256 MiB (was 1.5 GiB)
+    "vm.dirty_bytes" = 1073741824; # 1 GiB (was 4 GiB)
+    "vm.dirty_writeback_centisecs" = 100; # 1s (was 2.5s)
+    "vm.dirty_expire_centisecs" = 1000; # 10s (was 30s)
 
-    # More frequent writeback (2.5s vs 10s) eliminates bursty flushes/stutters.
-    "vm.dirty_writeback_centisecs" = 250; # 2.5 seconds
-
-    # Reasonable expire time (default-ish, pages sit dirty up to 30s before forced).
-    "vm.dirty_expire_centisecs" = 3000;
+    # Reserve free RAM for UI bursts (helps Wayland/KDE)
+    "vm.min_free_kbytes" = 524288; # 512 MiB for 96GB system
 
     # Enable Multi-Gen LRU for better reclaim behavior under mixed workloads.
     # NOTE: this kernel exposes MGLRU controls via /sys/kernel/mm/lru_gen/* (sysfs),
