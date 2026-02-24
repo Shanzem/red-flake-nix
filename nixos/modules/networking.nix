@@ -1,4 +1,5 @@
-{ lib
+{ config
+, lib
 , pkgs
 , ...
 }:
@@ -25,6 +26,11 @@
 
   networking.firewall.enable = false; # This one is necessary to expose ports to the netwok. Usefull for smbserver, responder, http.server, ...
   networking.nftables.enable = false; # This one is necessary to expose ports to the netwok. Usefull for smbserver, responder, http.server, ...
+
+  # Avoid a full 1m30 shutdown delay if dhcpcd hangs while stopping.
+  systemd.services = lib.mkIf config.networking.dhcpcd.enable {
+    dhcpcd.serviceConfig.TimeoutStopSec = "5s";
+  };
 
   ## To use, put this in your configuration, switch to it, and restart NM:
   ## $ sudo systemctl restart NetworkManager.service
