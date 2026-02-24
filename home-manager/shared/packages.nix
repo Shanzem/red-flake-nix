@@ -11,6 +11,7 @@
     zsh-powerlevel10k
     meslo-lgs-nf
     flatpak
+    devenv
   ];
 
   # Desktop/GUI packages for workstation users
