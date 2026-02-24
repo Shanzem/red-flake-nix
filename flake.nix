@@ -447,6 +447,11 @@
               hostConfig = ./nixos/hosts/kvm/default.nix;
               user = "redflake";
               isKVM = true;
+              nixpkgsConfig = {
+                allowUnfree = true;
+                firefox.enablePlasmaBrowserIntegration = true;
+              };
+              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redflake";
@@ -463,6 +468,11 @@
               hostConfig = ./nixos/hosts/vmware/default.nix;
               user = "redflake";
               isKVM = false;
+              nixpkgsConfig = {
+                allowUnfree = true;
+                firefox.enablePlasmaBrowserIntegration = true;
+              };
+              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redflake";
@@ -482,6 +492,7 @@
               includeTuxedo = true;
               nixpkgsConfig = {
                 allowUnfree = true;
+                firefox.enablePlasmaBrowserIntegration = true;
                 nvidia.acceptLicense = true;
                 cudaSupport = true;
               };
@@ -502,6 +513,10 @@
               hostConfig = ./nixos/hosts/vps/default.nix;
               user = "redcloud";
               isKVM = true;
+              nixpkgsConfig = {
+                allowUnfree = true;
+              };
+              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redcloud";
@@ -518,6 +533,11 @@
               hostConfig = ./nixos/hosts/redline/default.nix;
               user = "let";
               isKVM = false;
+              nixpkgsConfig = {
+                allowUnfree = true;
+                firefox.enablePlasmaBrowserIntegration = true;
+              };
+              extraModules = [ ];
               includeSpicetify = true;
               homeManagerConfigs = [
                 {
@@ -539,7 +559,9 @@
               nixpkgsConfig = {
                 allowUnfree = true;
                 rocmSupport = true;
+                firefox.enablePlasmaBrowserIntegration = true;
               };
+              extraModules = [ ];
               includeSpicetify = false;
               homeManagerConfigs = [
                 {
