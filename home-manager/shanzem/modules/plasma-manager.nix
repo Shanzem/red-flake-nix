@@ -134,7 +134,7 @@ in
                   "applications:com.mitchellh.ghostty.desktop"
                   "applications:firefox.desktop"
                   "applications:obsidian.desktop"
-                  "applications:org.telegram.desktop.desktop"
+                  "applications:google-chrome.desktop"
                   "applications:equibop.desktop"
                   "applications:code.desktop"
                   "applications:burpsuitepro.desktop"
