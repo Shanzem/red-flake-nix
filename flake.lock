@@ -1388,17 +1388,17 @@
         "nixpkgs": "nixpkgs_8"
       },
       "locked": {
-        "lastModified": 1771985562,
-        "narHash": "sha256-PB1aPCwDTobjrxNc4LwyNmaF3QNazccsYZmO6bmWVWM=",
-        "owner": "Mag1cByt3s",
+        "lastModified": 1772006162,
+        "narHash": "sha256-Ssre0jR64ZPYLMsw22kPcL7U1iErF3zUp1CmFK4oaYw=",
+        "owner": "nanomatters",
         "repo": "ucc",
-        "rev": "e1f2b96e3a5633271e4a71ad2705ffd5ae77445c",
+        "rev": "8698ddfc1687f433a95f16ee1a66135e8aecb0a1",
         "type": "github"
       },
       "original": {
-        "owner": "Mag1cByt3s",
+        "owner": "nanomatters",
         "repo": "ucc",
-        "rev": "e1f2b96e3a5633271e4a71ad2705ffd5ae77445c",
+        "rev": "8698ddfc1687f433a95f16ee1a66135e8aecb0a1",
         "type": "github"
       }
     },

@@ -191,8 +191,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # ucc.url = "github:nanomatters/ucc/658e52f25e553fd584994feaa72e7f1d98b5124f";
-    ucc.url = "github:Mag1cByt3s/ucc/e1f2b96e3a5633271e4a71ad2705ffd5ae77445c";
+    ucc.url = "github:nanomatters/ucc/8698ddfc1687f433a95f16ee1a66135e8aecb0a1";
+    #ucc.url = "github:Mag1cByt3s/ucc/e1f2b96e3a5633271e4a71ad2705ffd5ae77445c";
     #ucc = {
     #  url = "path:/home/pascal/Git/ucc";
     #  inputs.nixpkgs.follows = "nixpkgs";
