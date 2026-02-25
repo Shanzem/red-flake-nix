@@ -15,9 +15,8 @@
     avalonia-ilspy
   ];
 
-  # disable for now due to hash mismatch issues
-  #programs.binary-ninja = {
-  #  enable = true;
-  #  package = pkgs.binary-ninja-free-wayland;
-  #};
+  programs.binary-ninja = {
+    enable = true;
+    package = pkgs.binary-ninja-free-wayland;
+  };
 }

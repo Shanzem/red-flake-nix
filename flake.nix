@@ -97,10 +97,10 @@
 
     # disable for now due to hash mismatch issues
     # https://github.com/jchv/nix-binary-ninja
-    #binaryninja = {
-    #  url = "github:jchv/nix-binary-ninja";
-    #  inputs.nixpkgs.follows = "nixpkgs";
-    #};
+    binaryninja = {
+      url = "github:jchv/nix-binary-ninja";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # https://github.com/nix-community/poetry2nix
     poetry2nix = {
@@ -204,8 +204,8 @@
     , nixpkgs
     , flake-parts
     , pre-commit-hooks
-    , #binaryninja,
-      redflake-packages
+    , binaryninja
+    , redflake-packages
     , ucc
     , darkmatter-grub-theme
     , cachynix
@@ -428,7 +428,7 @@
                 darkmatter-grub-theme.nixosModule
                 inputs.impermanence.nixosModules.impermanence
                 cachynix.nixosModules.default
-                #binaryninja.nixosModules.binaryninja
+                binaryninja.nixosModules.binaryninja
                 (mkHost.mkHost profile hostConfig {
                   inherit hostname localeProfile;
                   inherit extraConfig;
