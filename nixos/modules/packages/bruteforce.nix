@@ -14,6 +14,8 @@
     john
     thc-hydra
     ncrack
+    gobuster
+    python313Packages.dirsearch
     # python312Packages.patator   # is marked as broken
     fcrackzip
     medusa
