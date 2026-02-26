@@ -183,6 +183,12 @@
       flake = false;
     };
 
+    # Red-Flake Plymouth theme
+    redflakePlymouth = {
+      url = "github:Red-Flake/redflake-plymouth/cad99c2de44912689d7d7deed3eb0543fcb6a300";
+      flake = false;
+    };
+
     # Red-Flake NUR packages
     redflake-packages = {
       type = "github";
