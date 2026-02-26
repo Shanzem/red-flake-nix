@@ -5,70 +5,72 @@
 }:
 
 {
-  networking.networkmanager.enable = true;
-  networking.useDHCP = lib.mkDefault true;
-  networking.wireless.iwd.enable = true;
-  networking.interfaces.wlan0.useDHCP = true;
-  networking.wireless.interfaces = [ "wlan0" ];
-  networking.wireless.iwd.settings = {
-    IPv6 = {
-      Enabled = true;
+  # NetworkManager
+  networking.networkmanager = {
+    enable = true;
+
+    wifi = {
+      backend = "iwd";
+      powersave = false;
     };
-    Settings = {
-      AutoConnect = true;
-    };
-    General = {
-      PowerSave = false;
+
+    # Dynamically set NTP servers received via DHCP (systemd-timesyncd).
+    # Debug: `sudo journalctl -u NetworkManager-dispatcher -e`
+    dispatcherScripts = [
+      {
+        source = pkgs.writeText "10-update-timesyncd" ''
+          [ -z "$CONNECTION_UUID" ] && exit 0
+          INTERFACE="$1"
+          ACTION="$2"
+
+          case "$ACTION" in
+            up|dhcp4-change|dhcp6-change)
+              systemctl restart systemd-timesyncd.service
+              if [ -n "$DHCP4_NTP_SERVERS" ]; then
+                echo "Will add the ntp server $DHCP4_NTP_SERVERS"
+              else
+                echo "No DHCP4 NTP available."
+                exit 0
+              fi
+
+              mkdir -p /etc/systemd/timesyncd.conf.d
+              echo "[Time]" > "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
+              echo "NTP=$DHCP4_NTP_SERVERS" >> "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
+              systemctl restart systemd-timesyncd.service
+              ;;
+
+            down)
+              rm -f "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
+              systemctl restart systemd-timesyncd.service
+              ;;
+          esac
+
+          echo "Done!"
+        '';
+      }
+    ];
+  };
+
+  # Let NetworkManager manage DHCP; avoid enabling dhcpcd (it can end up on the boot critical path).
+  networking.useDHCP = lib.mkForce false;
+  networking.dhcpcd.enable = lib.mkForce false;
+
+  # Wi-Fi via iwd (used by NetworkManager when `networkmanager.wifi.backend = "iwd"`).
+  networking.wireless.iwd = {
+    enable = true;
+    settings = {
+      Network.EnableIPv6 = true;
+      Settings.AutoConnect = true;
+      DriverQuirks.PowerSaveDisable = "*";
     };
   };
-  networking.networkmanager.wifi.backend = "iwd";
-  networking.networkmanager.wifi.powersave = false;
 
-  networking.firewall.enable = false; # This one is necessary to expose ports to the netwok. Usefull for smbserver, responder, http.server, ...
-  networking.nftables.enable = false; # This one is necessary to expose ports to the netwok. Usefull for smbserver, responder, http.server, ...
+  # Expose ports to the network (useful for smbserver/responder/http.server, etc.).
+  networking.firewall.enable = false;
+  networking.nftables.enable = false;
 
-  # Avoid a full 1m30 shutdown delay if dhcpcd hangs while stopping.
+  # If dhcpcd is enabled elsewhere, avoid a full 1m30 shutdown delay if it hangs while stopping.
   systemd.services = lib.mkIf config.networking.dhcpcd.enable {
     dhcpcd.serviceConfig.TimeoutStopSec = "5s";
   };
-
-  ## To use, put this in your configuration, switch to it, and restart NM:
-  ## $ sudo systemctl restart NetworkManager.service
-  ## To check if it works, you can do `sudo systemctl status systemd-timesyncd.service`
-  ## (it may take a bit of time to pick the right NTP as it may try the
-  ## other NTP firsts)
-  networking.networkmanager.dispatcherScripts = [
-    {
-      # https://wiki.archlinux.org/title/NetworkManager#Dynamically_set_NTP_servers_received_via_DHCP_with_systemd-timesyncd
-      # You can debug with sudo journalctl -u NetworkManager-dispatcher -e
-      # make sure to restart NM as described above
-      source = pkgs.writeText "10-update-timesyncd" ''
-        [ -z "$CONNECTION_UUID" ] && exit 0
-        INTERFACE="$1"
-        ACTION="$2"
-        case $ACTION in
-        up | dhcp4-change | dhcp6-change)
-            systemctl restart systemd-timesyncd.service
-            if [ -n "$DHCP4_NTP_SERVERS" ]; then
-              echo "Will add the ntp server $DHCP4_NTP_SERVERS"
-            else
-              echo "No DHCP4 NTP available."
-              exit 0
-            fi
-            mkdir -p /etc/systemd/timesyncd.conf.d
-            # <<-EOF must really use tabs to keep indentation correct… and tabs are often converted to space in wiki
-            # so I don't want to risk strange issues with indentation
-            echo "[Time]" > "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
-            echo "NTP=$DHCP4_NTP_SERVERS" >> "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
-            systemctl restart systemd-timesyncd.service
-            ;;
-        down)
-            rm -f "/etc/systemd/timesyncd.conf.d/''${CONNECTION_UUID}.conf"
-            systemctl restart systemd-timesyncd.service
-            ;;
-        esac
-        echo 'Done!'
-      '';
-    }
-  ];
 }
