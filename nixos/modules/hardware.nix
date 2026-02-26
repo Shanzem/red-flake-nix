@@ -5,6 +5,16 @@
 
   options.custom = {
 
+    hostType = lib.mkOption {
+      type = lib.types.enum [
+        "security"
+        "desktop"
+        "server"
+      ];
+      default = "security";
+      description = "Host profile type (used for conditional defaults).";
+    };
+
     # ZFS settings
     zfs = {
       encryption = lib.mkEnableOption "zfs encryption" // {

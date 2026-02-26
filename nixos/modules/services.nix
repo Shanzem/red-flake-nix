@@ -1,4 +1,5 @@
-{ lib
+{ config
+, lib
 , pkgs
 , user
 , inputs
@@ -6,6 +7,14 @@
 }:
 
 let
+  hostType = config.custom.hostType or "security";
+  isSecurityHost = hostType == "security";
+  isDesktopHost =
+    builtins.elem hostType [
+      "security"
+      "desktop"
+    ];
+
   # We need to use the Neo4j LTS version 4.4.11 because In Neo4j 5.x the legacy procedure CALL db.indexes() was removed (replaced by SHOW INDEXES). BloodHound CE 8 still calls db.indexes, so it expects Neo4j 4.4.x.
   # See: https://github.com/SpecterOps/BloodHound/blob/03454913830fec12eebc4451dca8af8b3b3c44d7/tools/docker-compose/neo4j.Dockerfile#L17
   neo4j_4_4_11 = inputs.nixpkgs-neo4j-4-4-11.legacyPackages.${pkgs.stdenv.hostPlatform.system}.neo4j;
@@ -78,12 +87,11 @@ in
   services.power-profiles-daemon.enable = false;
 
   # Postgresql settings
-  services.postgresql = {
-    enable = true;
+  # Red team stack (only enabled by default on "security" hosts).
+  services.postgresql = lib.mkIf isSecurityHost {
+    enable = lib.mkDefault true;
     enableTCPIP = true;
-    settings = {
-      port = 5432;
-    };
+    settings.port = 5432;
     authentication = lib.mkOverride 10 ''
       #type database  DBuser  auth-method
       local all       all     trust
@@ -104,8 +112,8 @@ in
   };
 
   # Neo4j settings
-  services.neo4j = {
-    enable = true;
+  services.neo4j = lib.mkIf isSecurityHost {
+    enable = lib.mkDefault true;
 
     # set package to 4.4.11 for BloodHound CE compatibility
     package = neo4j_4_4_11;
@@ -132,15 +140,15 @@ in
   };
 
   # Force our own preStart so the neo4j module does NOT link its generated server.* file.
-  systemd.services.neo4j.preStart = lib.mkForce ''
+  systemd.services.neo4j.preStart = lib.mkIf isSecurityHost (lib.mkForce ''
     set -eu
     install -d -m 0700 -o neo4j -g neo4j /var/lib/neo4j/{conf,logs,run,plugins,import,data}
     install -m 0600 -o neo4j -g neo4j ${neo4j44Conf} /var/lib/neo4j/conf/neo4j.conf
-  '';
+  '');
 
   # BloodHound-CE service settings
-  services.bloodhound-ce = {
-    enable = true;
+  services.bloodhound-ce = lib.mkIf isSecurityHost {
+    enable = lib.mkDefault true;
     package = pkgs.bloodhound-ce;
     openFirewall = true;
     # optional DB env if not using ident socket auth
@@ -160,9 +168,7 @@ in
 
       recreateDefaultAdmin = false;
 
-      featureFlags = {
-        darkMode = true;
-      };
+      featureFlags.darkMode = true;
     };
 
     database = {
@@ -186,17 +192,17 @@ in
   };
 
   # Fwupd settings
-  services.fwupd = {
-    enable = true;
-  };
+  # Fwupd (desktop/laptop only by default)
+  services.fwupd.enable = lib.mkDefault isDesktopHost;
 
   # Pipewire settings
   # Disable Pulseaudio
-  services.pulseaudio.enable = false;
+  # Audio stack (desktop only by default)
+  services.pulseaudio.enable = lib.mkIf isDesktopHost false;
   # rtkit is optional but recommended
-  security.rtkit.enable = true;
+  security.rtkit.enable = lib.mkDefault isDesktopHost;
   # Enable Pipewire
-  services.pipewire = {
+  services.pipewire = lib.mkIf isDesktopHost {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
@@ -222,24 +228,27 @@ in
   services.timesyncd.enable = true;
 
   # Enable profile-sync-daemon
-  services.psd = {
+  # Enable profile-sync-daemon (desktop only by default)
+  services.psd = lib.mkIf isDesktopHost {
     enable = true;
     resyncTimer = "30min";
   };
 
   # Fix race condition between PSD and Home Manager
   # Ensure Home Manager completes before PSD starts
-  systemd.user.services.psd = {
+  systemd.user.services.psd = lib.mkIf isDesktopHost {
     wants = [ "home-manager-${user}.service" ];
     after = [ "home-manager-${user}.service" ];
   };
 
   # Disable speech-dispatcher socket (TTS accessibility service not needed)
   # Prevents failed service errors from socket activation
-  systemd.user.sockets.speech-dispatcher.enable = false;
+  # Disable speech-dispatcher socket (desktop only; prevents failed activation noise)
+  systemd.user.sockets.speech-dispatcher.enable = lib.mkIf isDesktopHost false;
 
   # Enable Flatpak support
-  services.flatpak.enable = true;
+  # Flatpak (desktop only by default)
+  services.flatpak.enable = lib.mkDefault isDesktopHost;
 
   # Disable Ananicy-Cpp (conflicts with scx schedulers)
   services.ananicy = {

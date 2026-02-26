@@ -56,6 +56,9 @@
   # Only truly universal settings here - locale/timezone are host-specific
   system.stateVersion = "23.05"; # Do not change this value
 
+  # Make host type available to other modules for conditional defaults.
+  custom.hostType = lib.mkDefault hostType;
+
   # Default NVMe optimizations for all hosts (can be overridden per-host)
   services.udev.extraRules = ''
     # NVMe SSD: Use none scheduler (default for NVMe)
