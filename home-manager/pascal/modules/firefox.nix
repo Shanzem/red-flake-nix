@@ -808,6 +808,10 @@
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
           installation_mode = "force_installed";
         };
+        "{ce25b613-ecd1-47e0-9492-c0260efb633c}" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/google-sign-in-popup-blocker/latest.xpi";
+          installation_mode = "force_installed";
+        };
         "default-compact-dark-theme@glitchii.github.io" = {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/default-compact-dark-theme/latest.xpi";
           installation_mode = "force_installed";
