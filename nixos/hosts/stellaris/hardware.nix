@@ -323,7 +323,9 @@
     #KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "1500"; # ~45% of frame time (3333µs @ 300Hz); default is 1500µs
     #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting to reduce CPU usage during animations; DISABLED: causes slow kwin rendering
     #KWIN_FORCE_SW_CURSOR = "0"; # Use hardware cursor (Intel Xe defaults to software cursor);
-    KWIN_DRM_DEVICES = "/dev/dri/by-path/pci-0000:00:02.0-card:/dev/dri/by-path/pci-0000:02:00.0-card"; # (Intel iGPU first, NVIDIA dGPU second)
+    # NOTE: KWIN_DRM_DEVICES is ':'-separated; don't use /dev/dri/by-path/* (they contain ':' in the PCI address).
+    # Intel iGPU (0000:00:02.0) first, NVIDIA dGPU (0000:02:00.0) second.
+    KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";
   };
 
   # HiDPI fixes => https://github.com/NixOS/nixos-hardware/blob/3f7d0bca003eac1a1a7f4659bbab9c8f8c2a0958/common/hidpi.nix
@@ -332,6 +334,10 @@
 
   # Host-specific udev rules for NVMe optimization
   services.udev.extraRules = lib.mkAfter ''
+    # Stable DRM symlinks for KWin/SDDM Wayland (avoid ':' in names; KWIN_DRM_DEVICES uses ':' as a separator)
+    SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
+    SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
+
     # All NVMe SSDs: Kyber + low-latency for smooth UI/gaming (9100 Pro optimized)
     ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*", ENV{DEVTYPE}=="disk", \
       ATTR{queue/scheduler}="kyber", \
