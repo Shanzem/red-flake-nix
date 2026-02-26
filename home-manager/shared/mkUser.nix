@@ -2,10 +2,11 @@
 { inputs
 , lib
 , pkgs
+, homeDirectory
 , ...
 }:
 let
-  profiles = import ./profiles.nix { inherit inputs pkgs lib; };
+  profiles = import ./profiles.nix { inherit inputs pkgs lib homeDirectory; };
 in
 {
   # Create a user configuration from a profile
@@ -23,6 +24,7 @@ in
       home = {
         packages = profile.packages ++ (extraConfig.extraPackages or [ ]);
         sessionVariables = profile.sessionVariables // (extraConfig.extraSessionVariables or { });
+        sessionPath = (profile.sessionPath or [ ]) ++ (extraConfig.sessionPath or [ ]);
       }
       // (extraConfig.homeConfig or { });
 

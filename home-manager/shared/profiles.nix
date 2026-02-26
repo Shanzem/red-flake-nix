@@ -1,6 +1,7 @@
 # User profiles with specific configurations
 { inputs
 , pkgs
+, homeDirectory
 , ...
 }:
 let
@@ -27,17 +28,18 @@ in
       MOZ_USE_XINPUT2 = 1;
 
       # Set steam proton path
-      STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\\\${HOME}/.steam/root/compatibilitytools.d";
+      STEAM_EXTRA_COMPAT_TOOLS_PATHS = "${homeDirectory}/.steam/root/compatibilitytools.d";
 
       # Set terminal to Ghostty
       TERMINAL = "ghostty +new-window";
 
       # Set global xcursor size to 24; this matches the default cursor size in KDE Plasma of 24
       XCURSOR_SIZE = "24";
-
-      # Add ~/.local/bin to PATH
-      PATH = "\\\${HOME}/.local/bin:$PATH";
     };
+    sessionPath = [
+      "${homeDirectory}/.local/bin"
+      "${homeDirectory}/go/bin"
+    ];
     modules = [
       # Base modules
       ./base.nix
@@ -98,8 +100,14 @@ in
       };
     };
     sessionVariables = {
+      # Enable Wayland for Firefox by default.
+      # If you need XWayland for troubleshooting, launch with `MOZ_DISABLE_WAYLAND=1 firefox`.
       MOZ_ENABLE_WAYLAND = 1;
     };
+    sessionPath = [
+      "${homeDirectory}/.local/bin"
+      "${homeDirectory}/go/bin"
+    ];
     modules = [
       # Base modules
       ./base.nix
@@ -160,17 +168,18 @@ in
       MOZ_ENABLE_WAYLAND = 1;
 
       # Set steam proton path
-      STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\\\${HOME}/.steam/root/compatibilitytools.d";
+      STEAM_EXTRA_COMPAT_TOOLS_PATHS = "${homeDirectory}/.steam/root/compatibilitytools.d";
 
       # Set terminal to Ghostty
       TERMINAL = "ghostty +new-window";
 
       # Set global xcursor size to 24; this matches the default cursor size in KDE Plasma of 24
       XCURSOR_SIZE = "24";
-
-      # Add ~/.local/bin to PATH
-      PATH = "\\\${HOME}/.local/bin:$PATH";
     };
+    sessionPath = [
+      "${homeDirectory}/.local/bin"
+      "${homeDirectory}/go/bin"
+    ];
     modules = [
       # Base modules
       ./base.nix
@@ -226,8 +235,16 @@ in
       signing = null;
     };
     sessionVariables = {
+      # Enalbe Wayland for Firefox
       MOZ_ENABLE_WAYLAND = 1;
+
+      # Set global xcursor size to 24; this matches the default cursor size in KDE Plasma of 24
+      XCURSOR_SIZE = "24";
     };
+    sessionPath = [
+      "${homeDirectory}/.local/bin"
+      "${homeDirectory}/go/bin"
+    ];
     modules = [
       # Base modules
       ./base.nix
@@ -278,6 +295,10 @@ in
       signing = null;
     };
     sessionVariables = { };
+    sessionPath = [
+      "${homeDirectory}/.local/bin"
+      "${homeDirectory}/go/bin"
+    ];
     modules = [
       # Base modules
       ./base.nix
