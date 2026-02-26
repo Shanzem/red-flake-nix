@@ -323,7 +323,7 @@
     #KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "1500"; # ~45% of frame time (3333µs @ 300Hz); default is 1500µs
     #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting to reduce CPU usage during animations; DISABLED: causes slow kwin rendering
     #KWIN_FORCE_SW_CURSOR = "0"; # Use hardware cursor (Intel Xe defaults to software cursor);
-    KWIN_DRM_DEVICES = "/dev/dri/card0:/dev/dri/card1"; # (Intel: card0 first, NVIDIA: card1 second)
+    KWIN_DRM_DEVICES = "/dev/dri/by-path/pci-0000:00:02.0-card:/dev/dri/by-path/pci-0000:02:00.0-card"; # (Intel iGPU first, NVIDIA dGPU second)
   };
 
   # HiDPI fixes => https://github.com/NixOS/nixos-hardware/blob/3f7d0bca003eac1a1a7f4659bbab9c8f8c2a0958/common/hidpi.nix

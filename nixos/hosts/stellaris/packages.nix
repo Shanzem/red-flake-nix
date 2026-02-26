@@ -5,6 +5,7 @@
     intel-gpu-tools
     inputs.redflake-packages.packages.x86_64-linux.outline-electron
     inputs.ucc.packages.x86_64-linux.ucc
+    nvtopPackages.full
   ];
 
   programs.localsend.enable = true;
