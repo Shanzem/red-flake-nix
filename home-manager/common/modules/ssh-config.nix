@@ -47,6 +47,7 @@ in
           IdentitiesOnly yes
           StrictHostKeyChecking no
           UserKnownHostsFile /dev/null
+          SetEnv TERM=xterm-256color
 
       Host *
           HostKeyAlgorithms +ssh-rsa,rsa-sha2-256,rsa-sha2-512,ecdsa-sha2-nistp256,ssh-ed25519
@@ -54,6 +55,7 @@ in
           KexAlgorithms +diffie-hellman-group14-sha256,curve25519-sha256,diffie-hellman-group14-sha1
           Ciphers +aes128-ctr,aes192-ctr,aes256-ctr,chacha20-poly1305@openssh.com
           MACs +hmac-sha2-256,hmac-sha2-512,hmac-sha1
+          SetEnv TERM=xterm-256color
     '';
     force = true;
   };
