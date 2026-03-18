@@ -62,6 +62,36 @@
     freeSwapThreshold = 5; # Kill processes if free swap (ZRAM) drops below 5%
   };
 
+  # TuneD - Tuning Profile Delivery Mechanism for Linux
+  # A modern replacement for PPD(power-profiles-daemon)
+  services.tuned = {
+    enable = true;
+    settings = {
+      dynamic_tuning = true;
+      daemon = true;
+      profile_dirs = "/etc/tuned/";
+    };
+    ppdSupport = true; # translation of power-profiles-daemon API calls to TuneD
+    ppdSettings = {
+      main.default = lib.mkForce "performance";
+      # Map PPD "performance" to latency-performance (better for desktop/gaming)
+      profiles.performance = "latency-performance";
+    };
+  };
+  environment.etc."tuned/active_profile".text = "latency-performance";
+  systemd.services.tuned-set-profile = {
+    description = "Set TuneD profile";
+    after = [ "tuned.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.tuned}/bin/tuned-adm profile latency-performance";
+    };
+  };
+  # DBus service that provides power management support to applications
+  # Required by `tuned-ppd` for handling power supply changes
+  services.upower.enable = true;
+
   # Host-specific sched_ext configuration for Stellaris (Core Ultra 9 275HX + RTX 5070 Ti)
   services.scx = {
     enable = false; # Disabled for now due to issues with 100% CPU load on the LAVD scheduler
