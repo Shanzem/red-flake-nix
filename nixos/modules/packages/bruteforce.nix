@@ -12,6 +12,7 @@
     kerbrute
     hashcat
     john
+    jwtcrack
     thc-hydra
     ncrack
     gobuster
