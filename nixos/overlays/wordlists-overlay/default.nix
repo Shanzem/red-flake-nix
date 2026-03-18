@@ -6,8 +6,8 @@ _self: super: {
     # Fetch the repository using fetchgit with Git LFS support.
     src = super.fetchgit {
       url = "https://github.com/Red-Flake/wordlists.git";
-      rev = "e27f00a20c20c31ca0360f67bd4ac10bd93b1432"; # e.g. commit hash or branch name
-      sha256 = "sha256-ANg2ARepMWUIKNIuN7LSl+7rCTGIbmAVbRuyqK0jkbs=";
+      rev = "7fac1a1a6af2e41ba9a2264b89a521587416f19f"; # e.g. commit hash or branch name
+      sha256 = "sha256-YfEcKVByIPIagMhPZ6iDbx+o9EAUE8N7hW5QlM/y1hM=";
       fetchLFS = true;
     };
 
