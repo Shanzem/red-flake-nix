@@ -83,9 +83,37 @@ in
     };
 
     kwin = {
+      # set virtual desktops
       virtualDesktops = {
         rows = 1;
         number = 8;
+      };
+
+      # set kwin effects
+      effects = {
+        # Enable the "Dim Inactive" effect, which dims inactive windows to help focus on the active one.
+        dimInactive = {
+          enable = true;
+        };
+
+        # Enable the "Hide Cursor" effect, which hides the mouse cursor when typing to reduce distractions.
+        hideCursor = {
+          enable = true;
+          # Set the inactivity duration to 10 seconds before hiding the cursor.
+          hideOnInactivity = 10;
+          # Keep the cursor hidden while typing.
+          hideOnTyping = true;
+        };
+
+        # disable blur effect
+        blur = {
+          enable = false; # causes high CPU usage on Intel Xe (Arrow Lake)
+        };
+
+        # disable zoom effect
+        zoom = {
+          enable = false; # annoying
+        };
       };
     };
 
@@ -108,6 +136,7 @@ in
         location = "bottom";
         floating = false;
         height = 40;
+        opacity = "opaque";
         widgets = [
           # We can configure the widgets by adding the name and config
           # attributes. For example to add the the kickoff widget and set the
@@ -190,7 +219,9 @@ in
       # Global menu at the top
       {
         location = "top";
+        floating = false;
         height = 26;
+        opacity = "opaque";
         widgets = [
           "org.kde.plasma.appmenu"
         ];
@@ -284,22 +315,6 @@ in
       "krunnerrc"."Plugins"."baloosearchEnabled" = false;
       "kwinrc" = {
         "org.kde.kdecoration2"."ButtonsOnLeft" = "SF";
-        "Desktops"."Number" = {
-          value = 8;
-          # Forces kde to not change this value (even through the settings app).
-          immutable = true;
-        };
-        "Effect-hidecursor" = {
-          "HideOnTyping" = true;
-          "InactivityDuration" = 10;
-        };
-        "Plugins" = {
-          "dimscreenEnabled" = true;
-          "hidecursorEnabled" = true;
-          "zoomEnabled" = false;
-          # Disable blur effect - causes high CPU usage on Intel Xe (Arrow Lake)
-          "blurEnabled" = false;
-        };
         "Compositing" = {
           "TripleBuffering" = true; # Enable Kwin triple buffering
         };
