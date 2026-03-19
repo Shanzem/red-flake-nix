@@ -74,8 +74,10 @@
     ppdSupport = true; # translation of power-profiles-daemon API calls to TuneD
     ppdSettings = {
       main.default = lib.mkForce "performance";
-      # Map PPD "performance" to latency-performance (better for desktop/gaming)
+      # Map PPD profiles to TuneD profiles
       profiles.performance = "latency-performance";
+      profiles.balanced = "balanced";
+      profiles.power-saver = "powersave";
     };
   };
   environment.etc."tuned/active_profile".text = "latency-performance";
