@@ -253,16 +253,6 @@ in
   # Flatpak (desktop only by default)
   services.flatpak.enable = lib.mkDefault isDesktopHost;
 
-  # Disable Ananicy-Cpp (conflicts with scx schedulers)
-  services.ananicy = {
-    enable = false;
-    package = pkgs.ananicy-cpp;
-    rulesProvider = pkgs.ananicy-rules-cachyos;
-    settings = {
-      apply_nice = true;
-    };
-  };
-
   # Make nixos boot slightly faster by turning these off during boot
   systemd.services.NetworkManager-wait-online.enable = false;
 

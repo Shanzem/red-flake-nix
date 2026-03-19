@@ -175,6 +175,10 @@
 
       # TUXEDO keyboard module: set these as module options (NOT kernel cmdline)
       options tuxedo_keyboard kbd_backlight_mode=0
+
+      # ZFS ARC tuning for 96GB RAM
+      # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)
+      options zfs zfs_arc_max=17179869184
     '';
   };
 
