@@ -196,9 +196,11 @@ _:
     # MTU probing for better network performance
     "net.ipv4.tcp_mtu_probing" = 1;
 
-    # Disable watchdogs for lower latency (add to boot.kernel.sysctl section)
-    "kernel.nmi_watchdog" = 0;
-    "kernel.watchdog" = 0;
+    # Enable watchdogs to capture lockup debug info
+    # Note: Disabling watchdogs saves ~1W and reduces latency, but prevents
+    # detecting/logging hard lockups. Re-enabled for debugging system freezes.
+    "kernel.nmi_watchdog" = 1;
+    "kernel.watchdog" = 1;
 
     # Leave timer migration at the default (helps keep timers on housekeeping CPUs and avoids
     # concentrating timer work on a subset of cores).

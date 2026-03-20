@@ -37,7 +37,25 @@
         "nvidia.NVreg_DeviceFileGID=26" # 26 is the GID of the "video" group on NixOS
         "nvidia.NVreg_DeviceFileMode=0660" # Set device file permissions to rw-rw----
         "nvidia.NVreg_EnableS0ixPowerManagement=1" # Enable S0ix support in NVIDIA driver
-        "nvidia.NVreg_DynamicPowerManagement=0x02" # Enable dynamic power management to let TCC control power limits (0x01=disabled, 0x02=auto, 0x03=always on)
+        # RTD3 (Runtime D3) Power Management - controls GPU power state while system is awake
+        # See: https://download.nvidia.com/XFree86/Linux-x86_64/580.65.06/README/dynamicpowermanagement.html
+        #
+        # Available modes:
+        #   0x00 = Disabled: GPU always powered on (uses ~15-30W idle)
+        #   0x01 = Coarse-grained: GPU powers off only when NO nvidia apps are running
+        #   0x02 = Fine-grained: GPU actively monitored, powers off after short idle periods
+        #   0x03 = Default (fine-grained on Ampere+ notebooks, disabled elsewhere)
+        #
+        # Using coarse-grained (0x01) instead of fine-grained (0x02) because:
+        # - RTX 50 series (Blackwell) has known GSP timeout bugs with frequent D3 transitions
+        #   See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1045
+        # - Coarse-grained has fewer state transitions, reducing chance of GSP lockups
+        # - Still saves power when GPU is truly idle (no games/CUDA apps running)
+        # - S0ix suspend is unaffected (controlled separately by NVreg_EnableS0ixPowerManagement)
+        "nvidia.NVreg_DynamicPowerManagement=0x01"
+        # Video memory threshold for RTD3: if VRAM usage is below this (in MB), VRAM can be turned off
+        # Set to 0 to keep VRAM in self-refresh mode (faster wake, slightly more power) instead of off
+        # This reduces RTD3 transition latency and avoids potential issues with VRAM state restoration
         "nvidia.NVreg_DynamicPowerManagementVideoMemoryThreshold=0"
         "nvidia.NVreg_S0ixPowerManagementVideoMemoryThreshold=16384" # 16 GiB; > 12 GiB VRAM, so always copy vram to /dev/shm + power-off
         "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # Preserve video memory across suspend/resume; required for stable S0ix
@@ -65,9 +83,21 @@
       # System Power Management attempted without driver procfs suspend interface.
       # Please refer to the 'Configuring Power Management Support' section in the driver README.
 
-      # Fine-grained power management. Turns off GPU when not in use.
-      # Experimental and only works on modern Nvidia GPUs (Turing or newer).
-      powerManagement.finegrained = true;
+      # Fine-grained power management (RTD3) - actively monitors GPU and powers off after short idle
+      # See: https://download.nvidia.com/XFree86/Linux-x86_64/580.65.06/README/dynamicpowermanagement.html
+      #
+      # DISABLED because:
+      # - RTX 50 series (Blackwell) has known GSP timeout bugs causing system lockups
+      #   when the GPU frequently transitions in/out of D3 power state
+      #   See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1045
+      # - Using coarse-grained mode instead (NVreg_DynamicPowerManagement=0x01 in kernelParams)
+      #   which only powers off GPU when no NVIDIA apps are running at all
+      # - This reduces D3 state transitions while still providing power savings
+      #
+      # Note: This setting controls RTD3 (runtime power management while system is awake).
+      # S0ix suspend/resume is handled separately by NVreg_EnableS0ixPowerManagement=1
+      # and will continue to work regardless of this setting.
+      powerManagement.finegrained = false;
 
       # Use the Nvidia open source kernel module (not to be confused with the
       # independent third-party "nouveau" open source driver).
