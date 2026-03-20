@@ -38,7 +38,7 @@ let
         else
           "-${cfg.cachyos.target}";
     in
-    "linux-cachyos-lts${suffix}";
+    "linux-cachyos-${cfg.cachyos.variant}${suffix}";
 
   cachyKernel =
     let
@@ -91,6 +91,20 @@ in
       description = "Kernel flavor to use system-wide by default.";
     };
 
+    cachyos.variant = lib.mkOption {
+      type = lib.types.enum [
+        "lts"
+        "latest"
+      ];
+      default = "lts";
+      description = ''
+        CachyOS kernel variant to use when custom.kernel.flavor = "cachyos".
+
+        lts    -> Long-term support kernel (6.18.x)
+        latest -> Latest stable kernel (6.19.x)
+      '';
+    };
+
     cachyos.target = lib.mkOption {
       type = lib.types.enum [
         "generic"
@@ -101,13 +115,13 @@ in
       ];
       default = "generic";
       description = ''
-        CachyOS kernel target variant to use when custom.kernel.flavor = "cachyos".
+        CachyOS kernel target optimization to use when custom.kernel.flavor = "cachyos".
 
-        generic     -> linux-cachyos-lts
-        x86_64-v2   -> linux-cachyos-lts-x86_64-v2
-        x86_64-v3   -> linux-cachyos-lts-x86_64-v3
-        x86_64-v4   -> linux-cachyos-lts-x86_64-v4
-        zen4        -> linux-cachyos-lts-zen4
+        generic     -> linux-cachyos-{variant}
+        x86_64-v2   -> linux-cachyos-{variant}-x86_64-v2
+        x86_64-v3   -> linux-cachyos-{variant}-x86_64-v3
+        x86_64-v4   -> linux-cachyos-{variant}-x86_64-v4
+        zen4        -> linux-cachyos-{variant}-zen4
       '';
     };
 
