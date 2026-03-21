@@ -196,11 +196,10 @@ _:
     # MTU probing for better network performance
     "net.ipv4.tcp_mtu_probing" = 1;
 
-    # Enable watchdogs to capture lockup debug info
-    # Note: Disabling watchdogs saves ~1W and reduces latency, but prevents
-    # detecting/logging hard lockups. Re-enabled for debugging system freezes.
-    "kernel.nmi_watchdog" = 1;
-    "kernel.watchdog" = 1;
+    # Disable watchdogs for performance (~1W savings, reduced latency)
+    # Re-enable temporarily if debugging system freezes
+    "kernel.nmi_watchdog" = 0;
+    "kernel.watchdog" = 0;
 
     # Leave timer migration at the default (helps keep timers on housekeeping CPUs and avoids
     # concentrating timer work on a subset of cores).
@@ -212,5 +211,11 @@ _:
 
     # Disable proactive memory compaction to avoid latency spikes
     "vm.compaction_proactiveness" = 0;
+
+    # Disable zone reclaim for desktop (avoids aggressive local reclaim)
+    "vm.zone_reclaim_mode" = 0;
+
+    # Disable NUMA balancing (single-socket system, no benefit)
+    "kernel.numa_balancing" = 0;
   };
 }

@@ -153,8 +153,40 @@
       # Does not affect suspend/lid-close (S0ix/S3 uses separate shutdown sequence)
       "nvme_core.default_ps_max_latency_us=0"
 
-      # Set CAKE network scheduler as default
-      "net.core.default_qdisc=cake"
+      # Boot / quiet
+      "quiet"
+      "splash"
+
+      # Watchdog: disable for performance (re-enable for debugging lockups)
+      "nowatchdog"
+      "nmi_watchdog=0"
+      "modprobe.blacklist=iTCO_wdt"
+
+      # Security mitigations off for performance (use only on trusted single-user systems)
+      "mitigations=off"
+
+      # AHCI: skip staggered spin-up for faster boot
+      "libahci.ignore_sss=1"
+
+      # Enable SysRq key for debugging/recovery
+      "sysrq_always_enabled=1"
+
+      # Disable audit subsystem
+      "audit=0"
+
+      # Classic network interface naming (eth0, wlan0)
+      "net.ifnames=0"
+      "biosdevname=0"
+
+      # Timer/clock optimizations
+      "tsc=reliable"
+      "clocksource=tsc"
+
+      # Workqueue: disable power-efficient mode for lower latency
+      "workqueue.power_efficient=0"
+
+      # RCU: expedited grace periods for faster synchronization
+      "rcupdate.rcu_expedited=1"
     ];
 
     # --- extra kernel module options (goes into /etc/modprobe.d/nixos.conf) ---#
