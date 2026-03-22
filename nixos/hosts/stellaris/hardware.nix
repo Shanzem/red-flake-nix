@@ -14,6 +14,9 @@
           # Arrow Lake-HX Xe2: Override GuC firmware with specific version
           # The default linux-firmware may have a version that causes TLB invalidation timeouts.
           # This replaces the firmware BEFORE compression happens.
+          #
+          # Check DRM coredump for firmware version mismatches:
+          #   sudo cat /sys/class/drm/card0/device/devcoredump/data | strings
 
           # GuC firmware for Meteor Lake / Arrow Lake Xe
           rm -f $out/lib/firmware/i915/mtl_guc_70.bin $out/lib/firmware/i915/mtl_guc_70.bin.zst 2>/dev/null || true
