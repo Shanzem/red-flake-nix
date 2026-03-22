@@ -381,6 +381,14 @@
 
   # Host-specific udev rules for NVMe optimization
   services.udev.extraRules = lib.mkAfter ''
+    # Disable Thunderbolt wakeup to prevent spurious S0ix wakes (GPE46)
+    # TB4 USB Controller and NHI
+    ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:0d.0", ATTR{power/wakeup}="disabled"
+    ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:0d.2", ATTR{power/wakeup}="disabled"
+    # TB4 PCIe Root Ports
+    ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:07.0", ATTR{power/wakeup}="disabled"
+    ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:07.1", ATTR{power/wakeup}="disabled"
+
     # Stable DRM symlinks for KWin/SDDM Wayland (avoid ':' in names; KWIN_DRM_DEVICES uses ':' as a separator)
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
