@@ -5,6 +5,33 @@
 , ...
 }:
 {
+  # Override linux-firmware globally so enableAllFirmware uses our patched version
+  nixpkgs.overlays = [
+    (final: prev: {
+      linux-firmware = prev.linux-firmware.overrideAttrs (oldAttrs: {
+        nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ final.zstd ];
+        postInstall = (oldAttrs.postInstall or "") + ''
+          # Arrow Lake-HX Xe2: Override GuC firmware with specific version
+          # The default linux-firmware may have a version that causes TLB invalidation timeouts.
+          # This replaces the firmware BEFORE compression happens.
+
+          # GuC firmware for Meteor Lake / Arrow Lake Xe
+          rm -f $out/lib/firmware/i915/mtl_guc_70.bin $out/lib/firmware/i915/mtl_guc_70.bin.zst 2>/dev/null || true
+          cp ${final.fetchurl {
+            url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin";
+            sha256 = "sha256-d5Twtqvl/NnG9HA12v4hmfMKbn0jC9WlP7+ABaYOWRE="; # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin" | xargs nix hash to-sri --type sha256
+          }} $out/lib/firmware/i915/mtl_guc_70.bin
+
+          # HuC firmware for GT1 media (Firefox VAAPI)
+          rm -f $out/lib/firmware/i915/mtl_huc_gsc.bin $out/lib/firmware/i915/mtl_huc_gsc.bin.zst 2>/dev/null || true
+          cp ${final.fetchurl {
+            url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin";
+            sha256 = "sha256-PqI/OelGEi0URlZdGgfAhmvz48iBm0MTSSU3HYd8pM0="; # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin" | xargs nix hash to-sri --type sha256
+          }} $out/lib/firmware/i915/mtl_huc_gsc.bin
+        '';
+      });
+    })
+  ];
 
   custom = {
     # set Kernel options
@@ -117,6 +144,8 @@
       #"drm.debug=0x0"
 
       # Workarounds for Intel `xe` TLB invalidation fence timeouts / PHY refclk hiccups.
+      # DMC wakelock: prevent Display Microcontroller power state races that cause TLB timeouts
+      "xe.enable_dmc_wl=1"
       # Disable SAGV (System Agent voltage/frequency scaling) for stability.
       "xe.enable_sagv=0"
       # Enable DMC flip queue for better atomic commit coordination (may reduce "Device or resource busy" errors)
@@ -221,29 +250,8 @@
     # enable all firmware regardless of license
     enableAllFirmware = lib.mkForce true;
 
-    # load firmware packages
-    firmware = with pkgs; [
-      (linux-firmware.overrideAttrs (_oldAttrs: {
-        postFixup = ''
-          # Arrow Lake-HX Xe2: Ensure we load the exact GuC firmware the kernel expects
-          # Found in DRM coredump: `sudo cat /sys/class/drm/card0/device/devcoredump/data | strings`
-          # GuC firmware: i915/mtl_guc_70.bin
-          # GuC version: 70.53.0 (wanted 70.44.1)
-          # Arrow Lake-HX Xe2 (PCI 0x7d67): Downgrade to exact GuC v70.44.1 kernel wants
-          # Source: git.kernel.org i915/mtl_guc_70.bin (historical commit with v70.44.1)
-          cp ${pkgs.fetchurl {
-            url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin";
-            sha256 = "sha256-d5Twtqvl/NnG9HA12v4hmfMKbn0jC9WlP7+ABaYOWRE=";  # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin" | xargs nix hash to-sri --type sha256
-          }} $out/lib/firmware/i915/mtl_guc_70.bin
-
-          # HuC for GT1 media (Firefox VAAPI): Standard Meteor/Arrow Lake
-          cp ${pkgs.fetchurl {
-            url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin";
-            sha256 = "sha256-PqI/OelGEi0URlZdGgfAhmvz48iBm0MTSSU3HYd8pM0=";  # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin" | xargs nix hash to-sri --type sha256
-          }} $out/lib/firmware/i915/mtl_huc_gsc.bin
-        '';
-      }))
-    ];
+    # Firmware is overridden via nixpkgs.overlays at the top of this file
+    # This ensures enableAllFirmware uses our patched linux-firmware with correct GuC version
 
     # enable CPU microcode updates
     cpu.intel.updateMicrocode = lib.mkForce true;
