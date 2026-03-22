@@ -87,7 +87,7 @@ in
   services.power-profiles-daemon.enable = false;
 
   # Postgresql settings
-  # Red team stack (only enabled by default on "security" hosts).
+  # Used by BloodHound CE. Metasploit uses its own embedded PostgreSQL via msfdb.
   services.postgresql = lib.mkIf isSecurityHost {
     enable = lib.mkDefault true;
 
@@ -100,17 +100,46 @@ in
       local all       all     trust
       host all all      ::1/128      trust
       host all postgres 127.0.0.1/32 trust
-      host all msf 127.0.0.1/32 trust
       host all bloodhound 127.0.0.1/32 trust
     '';
+    # Note: initialScript only runs on first DB cluster creation.
+    # postgresql-ensure-users.service handles ongoing permission fixes for PostgreSQL 15+.
     initialScript = pkgs.writeText "backend-initScript" ''
-      CREATE ROLE msf WITH LOGIN PASSWORD 'msf' CREATEDB;
-      CREATE DATABASE msf;
-      GRANT ALL PRIVILEGES ON DATABASE msf TO msf;
-
       CREATE ROLE bloodhound WITH LOGIN PASSWORD 'bloodhound' CREATEDB;
       CREATE DATABASE bloodhound;
       GRANT ALL PRIVILEGES ON DATABASE bloodhound TO bloodhound;
+    '';
+  };
+
+  # Ensure PostgreSQL users have proper permissions (PostgreSQL 15+ compatibility)
+  # This runs on every boot to fix permissions that initialScript misses
+  systemd.services.postgresql-ensure-users = lib.mkIf isSecurityHost {
+    description = "Ensure PostgreSQL users have proper schema permissions";
+    after = [ "postgresql.service" ];
+    requires = [ "postgresql.service" ];
+    wantedBy = [ "multi-user.target" ];
+    path = [ config.services.postgresql.package ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "postgres";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # Ensure bloodhound database and permissions (PostgreSQL 15+ requires explicit schema grants)
+      psql -d postgres <<-'EOSQL'
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'bloodhound') THEN
+            CREATE ROLE bloodhound WITH LOGIN PASSWORD 'bloodhound' CREATEDB;
+          END IF;
+          IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'bloodhound') THEN
+            CREATE DATABASE bloodhound OWNER bloodhound;
+          END IF;
+        END $$;
+      EOSQL
+
+      psql -d bloodhound -c "ALTER DATABASE bloodhound OWNER TO bloodhound;"
+      psql -d bloodhound -c "GRANT ALL ON SCHEMA public TO bloodhound;"
     '';
   };
 
