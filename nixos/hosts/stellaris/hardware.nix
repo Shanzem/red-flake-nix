@@ -6,7 +6,34 @@
 }:
 {
   # Override linux-firmware globally so enableAllFirmware uses our patched version
+  # Also override tuxedo-drivers to fix compatibility with Linux 6.19+
   nixpkgs.overlays = [
+    # Overlay 1: Update tuxedo-drivers to 4.21.2 for Linux 6.19 compatibility
+    (final: prev: {
+      linuxKernel = prev.linuxKernel // {
+        packagesFor = kernel:
+          (prev.linuxKernel.packagesFor kernel).extend (_: lpPrev: {
+            tuxedo-drivers = lpPrev.tuxedo-drivers.overrideAttrs (_: {
+              version = "4.21.2";
+              src = final.fetchFromGitLab {
+                group = "tuxedocomputers";
+                owner = "development/packages";
+                repo = "tuxedo-drivers";
+                rev = "v4.21.2";
+                hash = "sha256-KMn3O3Rq8LaZAgr6R7zNeBn637zZDFD2E2X+a3zKN3s=";
+              };
+              # v4.21.2 moved udev rules to files/usr/lib/udev/rules.d/
+              postInstall = ''
+                substituteInPlace files/usr/lib/udev/rules.d/* \
+                  --replace-quiet "/bin/bash" "${final.lib.getExe final.bash}" \
+                  --replace-quiet "/bin/sh" "${final.lib.getExe final.bash}"
+                install -Dm 0644 -t $out/etc/udev/rules.d files/usr/lib/udev/rules.d/*
+              '';
+            });
+          });
+      };
+    })
+    # Overlay 2: Patch linux-firmware with correct GuC/HuC versions
     (final: prev: {
       linux-firmware = prev.linux-firmware.overrideAttrs (oldAttrs: {
         nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ final.zstd ];
