@@ -100,6 +100,9 @@
       "msr" # /dev/cpu/CPUNUM/msr provides an interface to read and write the model-specific registers (MSRs) of an x86 CPU
       "tuxedo_keyboard"
       "tuxedo_io"
+      "efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
+      "ramoops" # RAM-based oops/panic logger (fallback)
+      "netconsole" # Network console for remote kernel log capture
     ];
     extraModulePackages = with config.boot.kernelPackages; [
       tuxedo-drivers # TUXEDO-specific drivers
@@ -160,6 +163,18 @@
       # Keep display power wells on (avoid refclk/power-well related glitches at the cost of power).
       "xe.disable_power_well=0"
 
+      # === GPU DEBUG OPTIONS (reduced verbosity - 0x1ff was causing lag) ===
+      # DRM debug logging (bitmask: 0x1=core, 0x2=driver, 0x4=kms, 0x10=atomic, 0x100=lease, 0x200=vbl)
+      # 0x6 = DRIVER + KMS only (captures mode-setting issues without ioctl spam)
+      "drm.debug=0x6"
+
+      # Intel Xe GuC firmware debug logging (0=off, 1-4=increasing verbosity)
+      # Level 1 = errors/warnings only (sufficient for freeze debugging)
+      "xe.guc_log_level=1"
+
+      # Kernel log buffer (2MB is enough for reduced logging)
+      "log_buf_len=2M"
+
       # Intel Hybrid perf
       "intel_pstate=passive" # Let userspace (TUXEDO Control Center / TLP) manage P-states for Intel hybrid CPUs
 
@@ -189,10 +204,9 @@
       "quiet"
       "splash"
 
-      # Watchdog: disable for performance (re-enable for debugging lockups)
-      "nowatchdog"
-      "nmi_watchdog=0"
-      "modprobe.blacklist=iTCO_wdt"
+      # Watchdog: enabled for detecting hard lockups (Intel iTCO watchdog)
+      # NMI watchdog fires on hard CPU lockups; iTCO_wdt handles system-wide hangs
+      # Watchdog timeout is configured via systemd-watchdog (default 10s)
 
       # Security mitigations off for performance (use only on trusted single-user systems)
       "mitigations=off"
@@ -237,6 +251,14 @@
       options iwlmvm power_scheme=1
       options iwlwifi power_save=0 uapsd_disable=1
 
+      # Ramoops: RAM-based crash logger (fallback if EFI pstore unavailable)
+      # Increased buffer sizes for verbose debug logging (8MB total)
+      options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
+
+      # Netconsole: Send kernel logs over network for real-time capture
+      # Configure at runtime with: modprobe netconsole netconsole=@/wlan0,6666@<RECEIVER_IP>/
+      # Or use the systemd service below for dynamic configuration
+
       # TUXEDO keyboard module: set these as module options (NOT kernel cmdline)
       options tuxedo_keyboard kbd_backlight_mode=0
 
@@ -244,6 +266,99 @@
       # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)
       options zfs zfs_arc_max=17179869184
     '';
+  };
+
+  # Pstore/ramoops: Capture kernel crash logs across reboots
+  # Logs are stored in /sys/fs/pstore/ after a crash
+  fileSystems."/sys/fs/pstore" = {
+    device = "pstore";
+    fsType = "pstore";
+    options = [ "defaults" ];
+  };
+
+  # Systemd service to archive pstore crash logs on boot
+  systemd.services.pstore-archive = {
+    description = "Archive pstore crash logs";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "pstore-archive" ''
+        PSTORE_DIR="/sys/fs/pstore"
+        ARCHIVE_DIR="/var/log/pstore"
+
+        # Create archive directory if it doesn't exist
+        mkdir -p "$ARCHIVE_DIR"
+
+        # Check if there are any files to archive
+        if [ -n "$(ls -A $PSTORE_DIR 2>/dev/null)" ]; then
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          CRASH_DIR="$ARCHIVE_DIR/$TIMESTAMP"
+          mkdir -p "$CRASH_DIR"
+
+          # Copy all pstore files to archive
+          cp -a "$PSTORE_DIR"/* "$CRASH_DIR"/ 2>/dev/null || true
+
+          # Clear pstore after archiving
+          for f in "$PSTORE_DIR"/*; do
+            [ -e "$f" ] && rm -f "$f" 2>/dev/null || true
+          done
+
+          echo "Archived pstore crash logs to $CRASH_DIR"
+        fi
+      '';
+    };
+  };
+
+  # Netconsole: Real-time kernel log streaming over network
+  # Usage: On receiver machine, run: nc -u -l -p 6666
+  # Then on this machine: sudo systemctl start netconsole@<RECEIVER_IP>
+  # Example: sudo systemctl start netconsole@192.168.1.100
+  systemd.services."netconsole@" = {
+    description = "Netconsole kernel log streaming to %i";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "netconsole-start" ''
+        TARGET_IP="$1"
+        # Find default interface and local IP
+        IFACE=$(${pkgs.iproute2}/bin/ip route get "$TARGET_IP" | ${pkgs.gawk}/bin/awk '/dev/ {print $5; exit}')
+        LOCAL_IP=$(${pkgs.iproute2}/bin/ip route get "$TARGET_IP" | ${pkgs.gawk}/bin/awk '/src/ {print $7; exit}')
+        # Get target MAC (send a ping first to populate ARP cache)
+        ${pkgs.iputils}/bin/ping -c1 -W1 "$TARGET_IP" >/dev/null 2>&1 || true
+        TARGET_MAC=$(${pkgs.iproute2}/bin/ip neigh show "$TARGET_IP" | ${pkgs.gawk}/bin/awk '{print $5; exit}')
+        [ -z "$TARGET_MAC" ] && TARGET_MAC="ff:ff:ff:ff:ff:ff"
+
+        # Configure netconsole dynamically via configfs
+        NETCON_DIR="/sys/kernel/config/netconsole/target1"
+        mkdir -p "$NETCON_DIR"
+        echo "$IFACE" > "$NETCON_DIR/dev_name"
+        echo "$LOCAL_IP" > "$NETCON_DIR/local_ip"
+        echo 6665 > "$NETCON_DIR/local_port"
+        echo "$TARGET_IP" > "$NETCON_DIR/remote_ip"
+        echo 6666 > "$NETCON_DIR/remote_port"
+        echo "$TARGET_MAC" > "$NETCON_DIR/remote_mac"
+        echo 1 > "$NETCON_DIR/enabled"
+        echo "Netconsole streaming to $TARGET_IP:6666 via $IFACE ($LOCAL_IP)"
+      '' + " %i";
+      ExecStop = pkgs.writeShellScript "netconsole-stop" ''
+        NETCON_DIR="/sys/kernel/config/netconsole/target1"
+        [ -d "$NETCON_DIR" ] && {
+          echo 0 > "$NETCON_DIR/enabled" 2>/dev/null || true
+          rmdir "$NETCON_DIR" 2>/dev/null || true
+        }
+      '';
+    };
+  };
+
+  # Mount configfs for dynamic netconsole configuration
+  fileSystems."/sys/kernel/config" = {
+    device = "configfs";
+    fsType = "configfs";
+    options = [ "defaults" ];
   };
 
   hardware = {
@@ -286,6 +401,17 @@
       enable = false; # Disable original TUXEDO Control Center via tuxedo-nixos
       package = inputs.tuxedo-nixos.packages.x86_64-linux.default;
     };
+  };
+
+  # Systemd hardware watchdog: automatically reboot on hard lockups
+  # Intel iTCO watchdog will reset the system if systemd fails to ping it
+  systemd.settings.Manager = {
+    # Hardware watchdog timeout (seconds) - system reboots if no ping within this time
+    RuntimeWatchdogSec = "30";
+    # Reboot watchdog - ensure clean reboot completes within this time
+    RebootWatchdogSec = "10min";
+    # Shutdown watchdog - ensure clean shutdown completes within this time
+    ShutdownWatchdogSec = "10min";
   };
 
   # Enable Uniwill Control Center
@@ -376,11 +502,12 @@
 
     # KWin Wayland fixes for Intel Xe (Arrow Lake)
     # https://bugs.kde.org/show_bug.cgi?id=513296
-    # 300Hz = 3333µs frame time; default margin is 1000µs; too low = half refresh rate
-    #KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "500"; # Lower than default (1000); worked well for high refresh rate users
-    #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting to reduce CPU usage during animations; DISABLED: causes slow kwin rendering
-    #KWIN_FORCE_SW_CURSOR = "0"; # Use hardware cursor (Intel Xe defaults to software cursor);
-    #KWIN_DRM_DISABLE_TRIPLE_BUFFERING = "0"; # Enable KWin triple buffering
+    # Increase safety margin to give Xe driver more time for atomic commits (default 1000µs)
+    # Higher value = more latency but fewer "Device or resource busy" errors
+    KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "3000";
+    #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting entirely; DISABLED: causes slow kwin rendering
+    # Force software cursor to avoid hardware cursor plane atomic commits
+    KWIN_FORCE_SW_CURSOR = "1";
     # NOTE: KWIN_DRM_DEVICES is ':'-separated; don't use /dev/dri/by-path/* (they contain ':' in the PCI address).
     # Intel iGPU (0000:00:02.0) first, NVIDIA dGPU (0000:02:00.0) second.
     KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";
