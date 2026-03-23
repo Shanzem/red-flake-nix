@@ -40,6 +40,7 @@
     # set Kernel options
     kernel = {
       flavor = "cachyos";
+      cachyos.variant = "latest";
       cachyos.target = "x86_64-v3";
     };
 
@@ -163,10 +164,10 @@
       # Keep display power wells on (avoid refclk/power-well related glitches at the cost of power).
       "xe.disable_power_well=0"
 
-      # === GPU DEBUG OPTIONS (reduced verbosity - 0x1ff was causing lag) ===
+      # === GPU DEBUG OPTIONS ===
       # DRM debug logging (bitmask: 0x1=core, 0x2=driver, 0x4=kms, 0x10=atomic, 0x100=lease, 0x200=vbl)
-      # 0x6 = DRIVER + KMS only (captures mode-setting issues without ioctl spam)
-      "drm.debug=0x6"
+      # 0x0 = disabled (default), 0x6 = DRIVER + KMS for debugging
+      "drm.debug=0x0"
 
       # Intel Xe GuC firmware debug logging (0=off, 1-4=increasing verbosity)
       # Level 1 = errors/warnings only (sufficient for freeze debugging)
@@ -504,10 +505,13 @@
     # https://bugs.kde.org/show_bug.cgi?id=513296
     # Increase safety margin to give Xe driver more time for atomic commits (default 1000µs)
     # Higher value = more latency but fewer "Device or resource busy" errors
-    KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "3000";
+    #KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "3000";
+    # Silence "atomic commit failed: Device or resource busy" warnings from kwin_drm
+    # These are non-fatal retries that spam the journal; the actual commits succeed on retry
+    QT_LOGGING_RULES = "kwin_drm.warning=false";
     #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting entirely; DISABLED: causes slow kwin rendering
     # Force software cursor to avoid hardware cursor plane atomic commits
-    KWIN_FORCE_SW_CURSOR = "1";
+    #KWIN_FORCE_SW_CURSOR = "1";
     # NOTE: KWIN_DRM_DEVICES is ':'-separated; don't use /dev/dri/by-path/* (they contain ':' in the PCI address).
     # Intel iGPU (0000:00:02.0) first, NVIDIA dGPU (0000:02:00.0) second.
     KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";

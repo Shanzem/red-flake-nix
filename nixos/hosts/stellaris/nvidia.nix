@@ -3,6 +3,7 @@
 { config
 , lib
 , pkgs
+, pkgsUnstable
 , ...
 }:
 {
@@ -118,7 +119,8 @@
       nvidiaPersistenced = false;
 
       # Optionally, you may need to select the appropriate driver version for your specific GPU.
-      package = config.boot.kernelPackages.nvidiaPackages.latest;
+      # Use NVIDIA driver from nixpkgs-unstable, built against the current kernel
+      package = (pkgsUnstable.linuxPackagesFor config.boot.kernelPackages.kernel).nvidiaPackages.latest;
 
       prime = {
         offload = {
@@ -179,7 +181,7 @@
       Type = "oneshot";
       # `nvidia-sleep.sh` ships with `#!/bin/bash`, but NixOS does not guarantee `/bin/bash` exists.
       # If the interpreter is missing, systemd reports ENOENT on the script itself and suspend fails.
-      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.boot.kernelPackages.nvidiaPackages.latest}/bin/nvidia-sleep.sh suspend";
+      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.hardware.nvidia.package}/bin/nvidia-sleep.sh suspend";
     };
     before = [ "systemd-suspend.service" ];
     wantedBy = [ "suspend.target" ];
@@ -188,7 +190,7 @@
   systemd.services.nvidia-hibernate = {
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.boot.kernelPackages.nvidiaPackages.latest}/bin/nvidia-sleep.sh hibernate";
+      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.hardware.nvidia.package}/bin/nvidia-sleep.sh hibernate";
     };
     before = [ "systemd-hibernate.service" ];
     wantedBy = [ "hibernate.target" ];
@@ -197,7 +199,7 @@
   systemd.services.nvidia-resume = {
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.boot.kernelPackages.nvidiaPackages.latest}/bin/nvidia-sleep.sh resume";
+      ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.hardware.nvidia.package}/bin/nvidia-sleep.sh resume";
     };
     after = [
       "systemd-suspend.service"

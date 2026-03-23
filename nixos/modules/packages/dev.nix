@@ -20,7 +20,7 @@
     python313
     python313Packages.pip
     python313Packages.pipx
-    python313Packages.bpython
+    #python313Packages.bpython    # tests fail.....
     pkgs.pkgsCross.mingwW64.buildPackages.gcc # x86_64-w64-mingw32-gcc & g++
     pkgs.pkgsCross.mingw32.buildPackages.gcc # i686-w64-mingw32-gcc & g++
     pkgs.pkgsCross.mingwW64.buildPackages.binutils # Binutils for 64-bit

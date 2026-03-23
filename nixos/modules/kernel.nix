@@ -1,11 +1,22 @@
 { config
 , lib
 , pkgs
+, pkgsUnstable
 , inputs
 , ...
 }:
 let
   cfg = config.custom.kernel;
+
+  # Add ZFS 2.4 kernel module from pkgsUnstable (supports kernels 4.18 - 6.19)
+  withZfs24 =
+    kernelPackages:
+    kernelPackages // {
+      zfs_2_4 = pkgsUnstable.zfs_2_4.override {
+        configFile = "kernel";
+        inherit (kernelPackages) kernel;
+      };
+    };
 
   withNvidiaStripFix =
     kernelPackages:
@@ -73,11 +84,14 @@ let
     else
       defaultKernelPackages;
 
+  # Apply ZFS 2.4 and optionally NVIDIA strip fix
+  selectedKernelPackagesWithZfs = withZfs24 selectedKernelPackagesBase;
+
   selectedKernelPackages =
     if cfg.nvidia.stripFix.enable then
-      withNvidiaStripFix selectedKernelPackagesBase
+      withNvidiaStripFix selectedKernelPackagesWithZfs
     else
-      selectedKernelPackagesBase;
+      selectedKernelPackagesWithZfs;
 in
 {
   options.custom.kernel = {
