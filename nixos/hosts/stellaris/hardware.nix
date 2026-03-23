@@ -188,8 +188,9 @@
       "xe.enable_panel_replay=0"
       "xe.enable_psr2_sel_fetch=0"
       "xe.psr_safest_params=1"
-      # Keep display power wells on (avoid refclk/power-well related glitches at the cost of power).
-      "xe.disable_power_well=0"
+      # Let the driver manage display power wells automatically.
+      # Previously had xe.disable_power_well=0 to keep them on, but this can cause
+      # PHY refclk state inconsistencies during suspend/resume.
 
       # === GPU DEBUG OPTIONS ===
       # DRM debug logging (bitmask: 0x1=core, 0x2=driver, 0x4=kms, 0x10=atomic, 0x100=lease, 0x200=vbl)
@@ -430,6 +431,39 @@
       package = inputs.tuxedo-nixos.packages.x86_64-linux.default;
     };
   };
+
+  # Intel Xe suspend preparation: ensure DRM operations complete before suspend
+  # This prevents KWin from getting stuck in drm_open during the freeze phase
+  # when the Xe driver has pending PHY/refclk operations
+  systemd.services.xe-suspend-prep = {
+    description = "Prepare Intel Xe GPU for suspend";
+    before = [ "systemd-suspend.service" "systemd-hibernate.service" ];
+    wantedBy = [ "suspend.target" "hibernate.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "xe-suspend-prep" ''
+        # Sync filesystem to ensure no pending IO
+        sync
+        # Brief delay to let Xe driver complete any pending PHY/display operations
+        # This helps avoid the "PHY A failed to request refclk" race during suspend
+        sleep 1
+      '';
+    };
+  };
+
+  # SDDM startup: wait for DRM GPU drivers to fully initialize
+  # This works around the race condition where SDDM starts before xe driver is ready
+  # See: https://github.com/sddm/sddm/issues/1917
+  systemd.services.display-manager = {
+    after = [ "systemd-udev-settle.service" ];
+    wants = [ "systemd-udev-settle.service" ];
+  };
+
+  # Force SDDM to use X11 instead of Wayland
+  # This avoids Xe/Wayland race conditions during login greeter startup
+  # The parent kde.nix module sets wayland.enable = true, so we must force override
+  # See: https://github.com/sddm/sddm/issues/2142
+  services.displayManager.sddm.wayland.enable = lib.mkForce false;
 
   # Systemd hardware watchdog: automatically reboot on hard lockups
   # Intel iTCO watchdog will reset the system if systemd fails to ping it
