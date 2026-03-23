@@ -443,9 +443,16 @@
       ExecStart = pkgs.writeShellScript "xe-suspend-prep" ''
         # Sync filesystem to ensure no pending IO
         sync
+
+        # Flush GPU operations by reading from debugfs (if available)
+        # This helps drain any pending PHY/display operations
+        if [ -d /sys/kernel/debug/dri/0 ]; then
+          cat /sys/kernel/debug/dri/0/i915_gem_objects >/dev/null 2>&1 || true
+        fi
+
         # Brief delay to let Xe driver complete any pending PHY/display operations
         # This helps avoid the "PHY A failed to request refclk" race during suspend
-        sleep 1
+        sleep 2
       '';
     };
   };
@@ -492,6 +499,12 @@
   # https://github.com/nanomatters/ucc
   services.uccd = {
     enable = true;
+  };
+
+  # Fix UCCD PrepareForSleep signal failure: ensure D-Bus is ready before UCCD starts
+  systemd.services.uccd = {
+    after = [ "dbus.service" ];
+    wants = [ "dbus.service" ];
   };
 
   # Fix TCC service missing commands
@@ -574,6 +587,9 @@
     # Don't set PRIME/NVIDIA variables globally - let apps default to Intel
     # Steam and other apps can override these as needed
 
+    # Suppress MESA "experimental with Xe KMD" warning (expected for Arrow Lake)
+    MESA_LOG_LEVEL = "error";
+
     # KWin Wayland fixes for Intel Xe (Arrow Lake)
     # https://bugs.kde.org/show_bug.cgi?id=513296
     # Increase safety margin to give Xe driver more time for atomic commits (default 1000µs)
@@ -596,6 +612,9 @@
 
   # Host-specific udev rules for NVMe optimization
   services.udev.extraRules = lib.mkAfter ''
+    # Tell ModemManager to ignore WiFi interfaces (fixes "Missing port probe" warnings)
+    ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="wlan*", ENV{ID_MM_DEVICE_IGNORE}="1"
+
     # Disable Thunderbolt wakeup to prevent spurious S0ix wakes (GPE46)
     # TB4 USB Controller and NHI
     ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:0d.0", ATTR{power/wakeup}="disabled"

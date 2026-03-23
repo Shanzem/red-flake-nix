@@ -65,6 +65,14 @@ in
 
     ## Enable TRIM
     trim.enable = true;
+
+    ## ZED (ZFS Event Daemon) configuration
+    ## Disable LED scripts that cause "Failed to stat" errors on systems without enclosure LEDs
+    zed.settings = {
+      # Disable LED-related scripts (not needed without drive enclosure LED support)
+      ZED_USE_ENCLOSURE_LEDS = false;
+    };
+    zed.enableMail = false; # Disable email notifications (requires mail setup)
   };
 
   # Only run daily ZFS snapshots (disable other intervals)
