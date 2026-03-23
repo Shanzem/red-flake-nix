@@ -17,12 +17,8 @@ in
     kernelParams = [
       "quiet"
       "splash"
-      "nowatchdog"
-      "nmi_watchdog=0"
       "mitigations=off"
       "libahci.ignore_sss=1"
-      "modprobe.blacklist=iTCO_wdt"
-      "modprobe.blacklist=sp5100_tco"
       "sysrq_always_enabled=1"
       "split_lock_detect=off"
       "audit=0"

@@ -198,8 +198,7 @@
       "drm.debug=0x0"
 
       # Intel Xe GuC firmware debug logging (0=off, 1-4=increasing verbosity)
-      # Level 1 = errors/warnings only (sufficient for freeze debugging)
-      "xe.guc_log_level=1"
+      "xe.guc_log_level=0"
 
       # Kernel log buffer (2MB is enough for reduced logging)
       "log_buf_len=2M"
@@ -459,11 +458,24 @@
     wants = [ "systemd-udev-settle.service" ];
   };
 
-  # Force SDDM to use X11 instead of Wayland
-  # This avoids Xe/Wayland race conditions during login greeter startup
-  # The parent kde.nix module sets wayland.enable = true, so we must force override
-  # See: https://github.com/sddm/sddm/issues/2142
-  services.displayManager.sddm.wayland.enable = lib.mkForce false;
+  # Use Wayland SDDM with kwin_wayland compositor
+  # X11 mode has NixOS module bugs (empty CompositorCommand causes sddm-helper-start-wayland crash)
+  # Force Intel GPU for the greeter to avoid NVIDIA issues
+  services.displayManager.sddm.wayland.enable = lib.mkForce true;
+
+  # SDDM X11 mode requires xserver to be enabled
+  # Use Intel iGPU only for X11 - NVIDIA nouveau is blacklisted so modesetting fails on dGPU
+  services.xserver.enable = true;
+  services.xserver.deviceSection = ''
+    BusID "PCI:0:2:0"
+  '';
+
+  # Prevent X from auto-adding the NVIDIA GPU as a secondary screen
+  # Without this, modesetting auto-probes nvidia-drm and fails because glamor
+  # tries to use Mesa's nouveau driver which doesn't work with nvidia kernel module
+  services.xserver.serverFlagsSection = ''
+    Option "AutoAddGPU" "false"
+  '';
 
   # Systemd hardware watchdog: automatically reboot on hard lockups
   # Intel iTCO watchdog will reset the system if systemd fails to ping it
