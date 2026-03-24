@@ -1,6 +1,5 @@
 { config
 , lib
-, pkgs
 , ...
 }:
 
@@ -61,15 +60,15 @@
   services.upower.enable = true;
 
   # Ananicy-cpp: auto-prioritize processes (games high, background low)
-  # Works well alongside scx - ananicy sets nice/ionice, scx handles scheduling
-  services.ananicy = {
-    enable = true;
-    package = pkgs.ananicy-cpp;
-    rulesProvider = pkgs.ananicy-rules-cachyos;
-    settings = {
-      apply_nice = true;
-    };
-  };
+  # Disable to prevent conflicts with scx scheduler, which already optimizes for desktop responsiveness
+  #services.ananicy = {
+  #  enable = true;
+  #  package = pkgs.ananicy-cpp;
+  #  rulesProvider = pkgs.ananicy-rules-cachyos;
+  #  settings = {
+  #    apply_nice = true;
+  #  };
+  #};
 
   # Host-specific sched_ext configuration for Stellaris (Core Ultra 9 275HX + RTX 5070 Ti)
   services.scx = {
