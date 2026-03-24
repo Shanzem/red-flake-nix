@@ -38,6 +38,16 @@
         "nvidia.NVreg_DeviceFileGID=26" # 26 is the GID of the "video" group on NixOS
         "nvidia.NVreg_DeviceFileMode=0660" # Set device file permissions to rw-rw----
         "nvidia.NVreg_EnableS0ixPowerManagement=1" # Enable S0ix support in NVIDIA driver
+
+        # Use Message Signaled Interrupts (MSI) instead of traditional line-based interrupts.
+        # Reduces CPU overhead and latency; helps prevent "PHY refclk" and timing race 
+        # conditions on modern PCIe 5.0 buses (Arrow Lake + Blackwell).
+        "nvidia.NVreg_EnableMSI=1"
+
+        # Register the driver to receive ACPI events (lid close, AC plug/unplug).
+        # Required for "Dynamic Boost" to properly shift power between CPU and GPU 
+        # and ensures the GPU transitions power states correctly during s2idle.
+        "nvidia.NVreg_RegisterForACPIEvents=1"
         # RTD3 (Runtime D3) Power Management - controls GPU power state while system is awake
         # See: https://download.nvidia.com/XFree86/Linux-x86_64/580.65.06/README/dynamicpowermanagement.html
         #
@@ -72,6 +82,9 @@
   hardware = {
     # NVIDIA hybrid graphics setup (PRIME offload mode for battery efficiency; switch to sync if needed for performance)
     nvidia = {
+      # Blackwell GPUs require GSP (GPU System Processor) firmware to function.
+      gsp.enable = true;
+
       # Modesetting is required.
       modesetting.enable = true;
 
@@ -117,6 +130,9 @@
 
       # Disable NVIDIA persistence mode so the driver can be unloaded when not in use.
       nvidiaPersistenced = false;
+
+      # Enable NVIDIA Dynamic Boost for automatic CPU/GPU power management
+      dynamicBoost.enable = true;
 
       # Optionally, you may need to select the appropriate driver version for your specific GPU.
       # Use NVIDIA driver from nixpkgs-unstable, built against the current kernel
@@ -171,9 +187,6 @@
     # ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="on"
     # ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="on"
   '';
-
-  # Enable NVIDIA Dynamic Boost for automatic CPU/GPU power management
-  hardware.nvidia.dynamicBoost.enable = true;
 
   # Enable nvidia-suspend service
   systemd.services.nvidia-suspend = {

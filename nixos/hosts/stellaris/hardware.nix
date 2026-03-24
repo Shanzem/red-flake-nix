@@ -29,6 +29,16 @@
                   --replace-quiet "/bin/sh" "${final.lib.getExe final.bash}"
                 install -Dm 0644 -t $out/etc/udev/rules.d files/usr/lib/udev/rules.d/*
               '';
+              postPatch = (oldAttrs.postPatch or "") + ''
+                # Add your specific Board Name to the IO whitelist
+                # We append it to the existing list to ensure it's recognized
+                # cat /sys/class/dmi/id/board_name
+                sed -i '/static const char \*board_names\[\] = {/a \    "X6AR5xxY",' src/tuxedo_io/tuxedo_io.c
+
+                # Add your Product Name to the internal matching table
+                # at /sys/class/dmi/id/product_name
+                sed -i '/"TUXEDO Stellaris 16 Intel Gen6",/a \    "TUXEDO Stellaris 16 Intel Gen7",' src/tuxedo_io/tuxedo_io.c
+              '';
             });
           });
       };
