@@ -107,7 +107,7 @@ _:
 
     # Improve interactive responsiveness by grouping tasks per TTY/session.
     # DISABLED for scx!
-    # "kernel.sched_autogroup_enabled" = 1;
+    "kernel.sched_autogroup_enabled" = 0;
 
     # Enable the sysctl setting kernel.unprivileged_userns_clone to allow normal users to run unprivileged containers.
     "kernel.unprivileged_userns_clone" = 1;

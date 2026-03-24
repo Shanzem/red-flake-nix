@@ -117,20 +117,23 @@
       "xe"
     ];
     blacklistedKernelModules = [
-      "nouveau"
+      "nouveau" # prevent conflicts with nvidia driver
       "nvidiafb"
       "rivafb"
       #"i915" # don't blacklist i915. i915.force_probe=!7d67 already prevents i915 from binding to the iGPU
       "spd5118" # blacklist to avoid these issues: [  146.522972] spd5118 14-0050: Failed to write b = 0: -6    [  146.522974] spd5118 14-0050: PM: dpm_run_callback(): spd5118_resume [spd5118] returns -6     [  146.522978] spd5118 14-0050: PM: failed to resume async: error -6
+      "uniwill_laptop" # prevent conflicts with tuxedo_keyboard and tuxedo_io
+      "asus_wmi" # prevent conflicts with tuxedo_keyboard and tuxedo_io
     ];
     kernelModules = [
       "kvm-intel"
       "msr" # /dev/cpu/CPUNUM/msr provides an interface to read and write the model-specific registers (MSRs) of an x86 CPU
+      "intel_rapl_msr" # help UCCD see TDP hardware
       "tuxedo_keyboard"
       "tuxedo_io"
-      "efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
-      "ramoops" # RAM-based oops/panic logger (fallback)
-      "netconsole" # Network console for remote kernel log capture
+      #"efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
+      #"ramoops" # RAM-based oops/panic logger (fallback)
+      #"netconsole" # Network console for remote kernel log capture
     ];
     extraModulePackages = with config.boot.kernelPackages; [
       tuxedo-drivers # TUXEDO-specific drivers
@@ -139,6 +142,9 @@
 
     # TUXEDO-specific: kernel parameters
     kernelParams = [
+      # Force Tuxedo I/O driver
+      "tuxedo_io.force=1"
+
       # ACPI / keyboard
       "acpi_enforce_resources=lax" # Allow legacy driver access to ACPI resources; fixes non-compliant SW_LID implementations on some laptops
 
@@ -212,8 +218,11 @@
       # Kernel log buffer (2MB is enough for reduced logging)
       "log_buf_len=2M"
 
-      # Intel Hybrid perf
-      "intel_pstate=passive" # Let userspace (TUXEDO Control Center / TLP) manage P-states for Intel hybrid CPUs
+      # Intel Hybrid Performance: Enable 'active' mode to use Hardware P-States (HWP).
+      # This offloads frequency scaling to the CPU's internal Thread Director for 
+      # microsecond-fast P/E-core switching. Userspace (UCCD) now influences behavior 
+      # via Energy Performance Preference (EPP) hints rather than direct scaling.
+      "intel_pstate=active"
 
       # Select full kernel preemption via PREEMPT_DYNAMIC: lets higher‑prio tasks preempt most kernel code -> lower latency/better interactivity, small throughput/overhead cost.
       "preempt=full"
