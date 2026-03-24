@@ -47,13 +47,13 @@
         #   0x02 = Fine-grained: GPU actively monitored, powers off after short idle periods
         #   0x03 = Default (fine-grained on Ampere+ notebooks, disabled elsewhere)
         #
-        # Using coarse-grained (0x01) instead of fine-grained (0x02) because:
-        # - RTX 50 series (Blackwell) has known GSP timeout bugs with frequent D3 transitions
+        # DISABLED (0x00) because:
+        # - RTX 50 series (Blackwell) has severe GSP timeout bugs causing system lockups
         #   See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/1045
-        # - Coarse-grained has fewer state transitions, reducing chance of GSP lockups
-        # - Still saves power when GPU is truly idle (no games/CUDA apps running)
-        # - S0ix suspend is unaffected (controlled separately by NVreg_EnableS0ixPowerManagement)
-        "nvidia.NVreg_DynamicPowerManagement=0x01"
+        # - Even coarse-grained mode (0x01) can trigger GSP hangs on Blackwell
+        # - GPU stays powered on but avoids lockups entirely
+        # - Re-enable once NVIDIA fixes GSP issues in a future driver release
+        "nvidia.NVreg_DynamicPowerManagement=0x00"
         # Video memory threshold for RTD3: if VRAM usage is below this (in MB), VRAM can be turned off
         # Set to 0 to keep VRAM in self-refresh mode (faster wake, slightly more power) instead of off
         # This reduces RTD3 transition latency and avoids potential issues with VRAM state restoration
@@ -164,12 +164,12 @@
     # ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{remove}="1"
 
     # Enable runtime PM for NVIDIA VGA/3D controller devices on driver bind
-    ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="auto"
-    ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="auto"
+    # ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="auto"
+    # ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="auto"
 
     # Disable runtime PM for NVIDIA VGA/3D controller devices on driver unbind
-    ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="on"
-    ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="on"
+    # ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="on"
+    # ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="on"
   '';
 
   # Enable NVIDIA Dynamic Boost for automatic CPU/GPU power management

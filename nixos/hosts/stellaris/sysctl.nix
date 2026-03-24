@@ -64,14 +64,14 @@ _:
     # Adjust cache pressure
     # The value controls the tendency of the kernel to reclaim the memory which is used for caching of directory and inode objects (VFS cache).
     # Lowering it from the default value of 100 makes the kernel less inclined to reclaim VFS cache (do not set it to 0, this may produce out-of-memory conditions)
-    "vm.vfs_cache_pressure" = 10;
+    #"vm.vfs_cache_pressure" = 10;
 
     # Use byte-based limits for 96 GB RAM (avoids huge % thresholds)
     # Tighter dirty page flushing: prevents I/O bursts during Plasma animations
-    "vm.dirty_background_bytes" = 268435456; # 256 MiB (was 1.5 GiB)
-    "vm.dirty_bytes" = 1073741824; # 1 GiB (was 4 GiB)
-    "vm.dirty_writeback_centisecs" = 100; # 1s (was 2.5s)
-    "vm.dirty_expire_centisecs" = 1000; # 10s (was 30s)
+    #"vm.dirty_background_bytes" = 268435456; # 256 MiB (was 1.5 GiB)
+    #"vm.dirty_bytes" = 1073741824; # 1 GiB (was 4 GiB)
+    #"vm.dirty_writeback_centisecs" = 100; # 1s (was 2.5s)
+    #"vm.dirty_expire_centisecs" = 1000; # 10s (was 30s)
 
     # Reserve free RAM for UI bursts (helps Wayland/KDE)
     "vm.min_free_kbytes" = 524288; # 512 MiB for 96GB system
@@ -106,7 +106,8 @@ _:
     "kernel.sched_rt_runtime_us" = 950000;
 
     # Improve interactive responsiveness by grouping tasks per TTY/session.
-    "kernel.sched_autogroup_enabled" = 1;
+    # DISABLED for scx!
+    # "kernel.sched_autogroup_enabled" = 1;
 
     # Enable the sysctl setting kernel.unprivileged_userns_clone to allow normal users to run unprivileged containers.
     "kernel.unprivileged_userns_clone" = 1;

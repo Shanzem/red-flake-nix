@@ -177,17 +177,26 @@
       # Quiet Intel Xe DRM debug kernel log spam (TLB/PHY refclk issues...)
       #"drm.debug=0x0"
 
-      # Workarounds for Intel `xe` TLB invalidation fence timeouts / PHY refclk hiccups.
-      # DMC wakelock: prevent Display Microcontroller power state races that cause TLB timeouts
+      # Workarounds for Intel Xe TLB invalidation fence timeouts / PHY refclk errors
+      # Symptoms: "TLB invalidation fence timeout" and "PHY A failed to request refclk" in dmesg
+      #
+      # DMC Wakelock: Hold wakelock during TLB operations to prevent race conditions
+      # where the Display Microcontroller enters low-power state mid-operation.
+      # Fixes: "TLB invalidation fence timeout, seqno=X recv=Y" errors
+      # Tradeoff: ~0.2-0.5W higher idle power
       "xe.enable_dmc_wl=1"
-      # Disable SAGV (System Agent voltage/frequency scaling) for stability.
+      #
+      # Disable SAGV (System Agent Geyserville / voltage-frequency scaling)
+      # Keeps System Agent at stable frequency to prevent clock request timing races.
+      # Fixes: "PHY A failed to request refclk" errors during display state changes
+      # Tradeoff: ~0.3-0.5W higher idle power
       "xe.enable_sagv=0"
       # Enable DMC flip queue for better atomic commit coordination (may reduce "Device or resource busy" errors)
-      "xe.enable_flipq=1"
+      #"xe.enable_flipq=1"
       # Disable Panel Replay / PSR2 selective fetch. Some panels/firmware combos misbehave here.
-      "xe.enable_panel_replay=0"
-      "xe.enable_psr2_sel_fetch=0"
-      "xe.psr_safest_params=1"
+      #"xe.enable_panel_replay=0"
+      #"xe.enable_psr2_sel_fetch=0"
+      #"xe.psr_safest_params=1"
       # Let the driver manage display power wells automatically.
       # Previously had xe.disable_power_well=0 to keep them on, but this can cause
       # PHY refclk state inconsistencies during suspend/resume.
@@ -253,14 +262,14 @@
       "biosdevname=0"
 
       # Timer/clock optimizations
-      "tsc=reliable"
-      "clocksource=tsc"
+      #"tsc=reliable"
+      #"clocksource=tsc"
 
       # Workqueue: disable power-efficient mode for lower latency
-      "workqueue.power_efficient=0"
+      #"workqueue.power_efficient=0"
 
       # RCU: expedited grace periods for faster synchronization
-      "rcupdate.rcu_expedited=1"
+      #"rcupdate.rcu_expedited=1"
     ];
 
     # --- extra kernel module options (goes into /etc/modprobe.d/nixos.conf) ---#
@@ -281,7 +290,7 @@
 
       # Ramoops: RAM-based crash logger (fallback if EFI pstore unavailable)
       # Increased buffer sizes for verbose debug logging (8MB total)
-      options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
+      #options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
 
       # Netconsole: Send kernel logs over network for real-time capture
       # Configure at runtime with: modprobe netconsole netconsole=@/wlan0,6666@<RECEIVER_IP>/
@@ -298,14 +307,14 @@
 
   # Pstore/ramoops: Capture kernel crash logs across reboots
   # Logs are stored in /sys/fs/pstore/ after a crash
-  fileSystems."/sys/fs/pstore" = {
+  /* fileSystems."/sys/fs/pstore" = {
     device = "pstore";
     fsType = "pstore";
     options = [ "defaults" ];
-  };
+  }; */
 
   # Systemd service to archive pstore crash logs on boot
-  systemd.services.pstore-archive = {
+  /* systemd.services.pstore-archive = {
     description = "Archive pstore crash logs";
     wantedBy = [ "multi-user.target" ];
     after = [ "local-fs.target" ];
@@ -337,13 +346,13 @@
         fi
       '';
     };
-  };
+  }; */
 
   # Netconsole: Real-time kernel log streaming over network
   # Usage: On receiver machine, run: nc -u -l -p 6666
   # Then on this machine: sudo systemctl start netconsole@<RECEIVER_IP>
   # Example: sudo systemctl start netconsole@192.168.1.100
-  systemd.services."netconsole@" = {
+  /* systemd.services."netconsole@" = {
     description = "Netconsole kernel log streaming to %i";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
@@ -380,14 +389,14 @@
         }
       '';
     };
-  };
+  }; */
 
   # Mount configfs for dynamic netconsole configuration
-  fileSystems."/sys/kernel/config" = {
+  /* fileSystems."/sys/kernel/config" = {
     device = "configfs";
     fsType = "configfs";
     options = [ "defaults" ];
-  };
+  }; */
 
   hardware = {
     # enable firmware with a license allowing redistribution
@@ -443,13 +452,7 @@
       ExecStart = pkgs.writeShellScript "xe-suspend-prep" ''
         # Sync filesystem to ensure no pending IO
         sync
-
-        # Flush GPU operations by reading from debugfs (if available)
-        # This helps drain any pending PHY/display operations
-        if [ -d /sys/kernel/debug/dri/0 ]; then
-          cat /sys/kernel/debug/dri/0/i915_gem_objects >/dev/null 2>&1 || true
-        fi
-
+        
         # Brief delay to let Xe driver complete any pending PHY/display operations
         # This helps avoid the "PHY A failed to request refclk" race during suspend
         sleep 2
@@ -472,28 +475,28 @@
 
   # SDDM X11 mode requires xserver to be enabled
   # Use Intel iGPU only for X11 - NVIDIA nouveau is blacklisted so modesetting fails on dGPU
-  services.xserver.enable = true;
-  services.xserver.deviceSection = ''
-    BusID "PCI:0:2:0"
-  '';
+  #services.xserver.enable = true;
+  #services.xserver.deviceSection = ''
+  #  BusID "PCI:0:2:0"
+  #'';
 
   # Prevent X from auto-adding the NVIDIA GPU as a secondary screen
   # Without this, modesetting auto-probes nvidia-drm and fails because glamor
   # tries to use Mesa's nouveau driver which doesn't work with nvidia kernel module
-  services.xserver.serverFlagsSection = ''
-    Option "AutoAddGPU" "false"
-  '';
+  #services.xserver.serverFlagsSection = ''
+  #  Option "AutoAddGPU" "false"
+  #'';
 
   # Systemd hardware watchdog: automatically reboot on hard lockups
   # Intel iTCO watchdog will reset the system if systemd fails to ping it
-  systemd.settings.Manager = {
+  /*systemd.settings.Manager = {
     # Hardware watchdog timeout (seconds) - system reboots if no ping within this time
     RuntimeWatchdogSec = "30";
     # Reboot watchdog - ensure clean reboot completes within this time
     RebootWatchdogSec = "10min";
     # Shutdown watchdog - ensure clean shutdown completes within this time
     ShutdownWatchdogSec = "10min";
-  };
+  };*/
 
   # Enable Uniwill Control Center
   # https://github.com/nanomatters/ucc
@@ -627,26 +630,16 @@
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
 
-    # All NVMe SSDs: Kyber + low-latency for smooth UI/gaming (9100 Pro optimized)
+    # All NVMe SSDs: no scheduler (ZFS has its own I/O pipeline; double-scheduling adds CPU overhead)
     ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*", ENV{DEVTYPE}=="disk", \
-      ATTR{queue/scheduler}="kyber", \
-      ATTR{queue/nr_requests}="32", \
+      ATTR{queue/scheduler}="none", \
       ATTR{queue/rq_affinity}="2", \
-      ATTR{queue/iosched/read_lat_nsec}="2000000", \
-      ATTR{queue/iosched/write_lat_nsec}="10000000", \
       ATTR{queue/read_ahead_kb}="128"
 
-    # ZFS partitions on NVMe: Re-apply parent settings (handles pool changes)
+    # ZFS partitions on NVMe: Re-apply parent block-layer settings (handles pool changes)
     ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*p*", ENV{ID_FS_TYPE}=="zfs_member", \
-      ATTR{../queue/scheduler}="kyber", \
-      ATTR{../queue/nr_requests}="32", \
+      ATTR{../queue/scheduler}="none", \
       ATTR{../queue/rq_affinity}="2", \
-      ATTR{../queue/iosched/read_lat_nsec}="2000000", \
-      ATTR{../queue/iosched/write_lat_nsec}="10000000", \
       ATTR{../queue/read_ahead_kb}="128"
-
-    # Samsung NVMe: Extra iomem relaxation (Gen5 perf boost)
-    ACTION=="add|change", SUBSYSTEM=="nvme", ATTR{vendor}=="0x144d", ATTR{model}=="Samsung SSD 9100 PRO*", \
-      ATTR{device/iomem_policy}="relaxed"
   '';
 }
