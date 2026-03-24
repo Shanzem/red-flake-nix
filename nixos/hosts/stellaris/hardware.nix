@@ -13,7 +13,8 @@
       linuxKernel = prev.linuxKernel // {
         packagesFor = kernel:
           (prev.linuxKernel.packagesFor kernel).extend (_: lpPrev: {
-            tuxedo-drivers = lpPrev.tuxedo-drivers.overrideAttrs (_: {
+            # Change the underscore (_) to 'oldAttrs' below
+            tuxedo-drivers = lpPrev.tuxedo-drivers.overrideAttrs (oldAttrs: {
               version = "4.21.2";
               src = final.fetchFromGitLab {
                 group = "tuxedocomputers";
@@ -22,16 +23,10 @@
                 rev = "v4.21.2";
                 hash = "sha256-KMn3O3Rq8LaZAgr6R7zNeBn637zZDFD2E2X+a3zKN3s=";
               };
-              # v4.21.2 moved udev rules to files/usr/lib/udev/rules.d/
-              postInstall = ''
-                substituteInPlace files/usr/lib/udev/rules.d/* \
-                  --replace-quiet "/bin/bash" "${final.lib.getExe final.bash}" \
-                  --replace-quiet "/bin/sh" "${final.lib.getExe final.bash}"
-                install -Dm 0644 -t $out/etc/udev/rules.d files/usr/lib/udev/rules.d/*
-              '';
+
+              # Now oldAttrs.postPatch is correctly in scope
               postPatch = (oldAttrs.postPatch or "") + ''
                 # Add your specific Board Name to the IO whitelist
-                # We append it to the existing list to ensure it's recognized
                 # cat /sys/class/dmi/id/board_name
                 sed -i '/static const char \*board_names\[\] = {/a \    "X6AR5xxY",' src/tuxedo_io/tuxedo_io.c
 
@@ -39,10 +34,19 @@
                 # at /sys/class/dmi/id/product_name
                 sed -i '/"TUXEDO Stellaris 16 Intel Gen6",/a \    "TUXEDO Stellaris 16 Intel Gen7",' src/tuxedo_io/tuxedo_io.c
               '';
+
+              # v4.21.2 moved udev rules to files/usr/lib/udev/rules.d/
+              postInstall = ''
+                substituteInPlace files/usr/lib/udev/rules.d/* \
+                  --replace-quiet "/bin/bash" "${final.lib.getExe final.bash}" \
+                  --replace-quiet "/bin/sh" "${final.lib.getExe final.bash}"
+                install -Dm 0644 -t $out/etc/udev/rules.d files/usr/lib/udev/rules.d/*
+              '';
             });
           });
       };
     })
+
     # Overlay 2: Patch linux-firmware with correct GuC/HuC versions
     (final: prev: {
       linux-firmware = prev.linux-firmware.overrideAttrs (oldAttrs: {
