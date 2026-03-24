@@ -33,7 +33,6 @@
     builders-use-substitutes = true;
     max-jobs = "auto";
     cores = 0;
-    allowUnfree = true;
   };
 
   inputs = {
@@ -242,28 +241,27 @@
       perSystem =
         { system, ... }:
         let
+          # Shared nixpkgs config
+          sharedNixpkgsConfig = {
+            allowUnfree = true;
+            allowInsecure = true;
+            permittedInsecurePackages = [
+              "python-2.7.18.8"
+              "python-2.7.18.12"
+              "openssl-1.1.1w"
+            ];
+          };
+
           # Import shared overlays
           sharedOverlays = import nixos/shared/overlays.nix { inherit inputs; };
 
           # Common overlays used across all configurations
           commonOverlays = sharedOverlays.baseOverlays;
 
-          # We need a custom pkgs with our overlays for checks/shells
-          # We can't easily rely on the default 'pkgs' argument here if we want our specific configuration
-          # So we recreate commonPkgs logic for perSystem tools
-          insecurePackages = [
-            "openssl-1.1.1w"
-            "python-2.7.18.8"
-            "python-2.7.18.12"
-            "python27Full"
-          ];
-
+          # Custom pkgs with our overlays for checks/shells
           commonPkgs = import inputs.nixpkgs {
             inherit system;
-            config = {
-              allowUnfree = true;
-              permittedInsecurePackages = insecurePackages;
-            };
+            config = sharedNixpkgsConfig;
             overlays = commonOverlays;
           };
         in
@@ -319,12 +317,18 @@
         let
           system = "x86_64-linux";
           inherit (self) outputs;
-          insecurePackages = [
-            "openssl-1.1.1w"
-            "python-2.7.18.8"
-            "python-2.7.18.12"
-            "python27Full"
-          ];
+
+          # Shared nixpkgs config used across all package sets
+          sharedNixpkgsConfig = {
+            allowUnfree = true;
+            allowInsecure = true;
+            # Fallback: explicit list in case allowInsecure doesn't work everywhere
+            permittedInsecurePackages = [
+              "python-2.7.18.8"
+              "python-2.7.18.12"
+              "openssl-1.1.1w"
+            ];
+          };
 
           # Import shared overlays
           sharedOverlays = import nixos/shared/overlays.nix { inherit inputs; };
@@ -335,21 +339,8 @@
           # Common pkgs with overlays applied once (used for general utilities)
           commonPkgs = import inputs.nixpkgs {
             inherit system;
-            config = {
-              allowUnfree = true;
-              permittedInsecurePackages = insecurePackages;
-            };
+            config = sharedNixpkgsConfig;
             overlays = commonOverlays;
-          };
-
-          # Common unstable pkgs (used when HM modules need newer packages)
-          commonPkgsUnstable = import inputs.nixpkgs-unstable {
-            inherit system;
-            config = {
-              allowUnfree = true;
-              permittedInsecurePackages = insecurePackages;
-            };
-            overlays = [ ];
           };
 
           # Import shared user helper (parametrized by pkgs to match host config)
@@ -379,9 +370,8 @@
             , stateVersion ? "23.05"
             , profile
             , extraConfig ? { }
-            , pkgs ? commonPkgs
-            , pkgsUnstable ? commonPkgsUnstable
-            ,
+            , pkgs
+            , pkgsUnstable
             }:
             {
               imports = [ inputs.home-manager.nixosModules.home-manager ];
@@ -439,33 +429,28 @@
                   ])
                   sharedOverlays.desktopOverlays;
 
+              # Combined nixpkgs config
+              hostNixpkgsConfig = sharedNixpkgsConfig // nixpkgsConfig;
+
+              # Pre-import pkgs for specialArgs (home-manager, etc.)
               hostPkgs = import inputs.nixpkgs {
                 inherit system;
-                config = {
-                  allowUnfree = true;
-                  permittedInsecurePackages =
-                    nixpkgsConfig.permittedInsecurePackages or (if profile == "server" then [ ] else insecurePackages);
-                }
-                // nixpkgsConfig;
+                config = hostNixpkgsConfig;
                 overlays = hostOverlays;
               };
 
               hostPkgsUnstable = import inputs.nixpkgs-unstable {
                 inherit system;
-                config = {
-                  allowUnfree = true;
-                  permittedInsecurePackages =
-                    nixpkgsConfig.permittedInsecurePackages or (if profile == "server" then [ ] else insecurePackages);
-                }
-                // nixpkgsConfig;
+                config = hostNixpkgsConfig;
                 overlays = hostOverlays;
               };
             in
             nixpkgs.lib.nixosSystem {
               inherit system;
-              pkgs = hostPkgs;
+              # Don't pass pkgs directly - configure via modules instead
               specialArgs = {
                 inherit inputs outputs;
+                inherit hostPkgs;
                 chaoticPkgs = hostPkgs.chaoticPkgs or hostPkgs;
                 pkgsUnstable = hostPkgsUnstable;
                 inherit user isKVM;
@@ -473,6 +458,11 @@
                 hostType = profile;
               };
               modules = [
+                # Configure nixpkgs via module system (allows insecure/unfree globally)
+                {
+                  nixpkgs.config = hostNixpkgsConfig;
+                  nixpkgs.overlays = hostOverlays;
+                }
                 redflake-packages.nixosModules.bloodhound-ce
                 darkmatter-grub-theme.nixosModule
                 inputs.impermanence.nixosModules.impermanence
@@ -482,8 +472,8 @@
                   inherit extraConfig;
                   extraModules =
                     extraModules
-                      ++ (if includeSpicetify then [ spicetify-nix.nixosModules.default ] else [ ])
-                      ++ (if includeTuxedo then [ tuxedo-nixos.nixosModules.default ucc.nixosModules.default ] else [ ]);
+                      ++ nixpkgs.lib.optionals includeSpicetify [ spicetify-nix.nixosModules.default ]
+                      ++ nixpkgs.lib.optionals includeTuxedo [ tuxedo-nixos.nixosModules.default ucc.nixosModules.default ];
                 })
               ]
               ++ (map
@@ -508,10 +498,8 @@
               user = "redflake";
               isKVM = true;
               nixpkgsConfig = {
-                allowUnfree = true;
                 firefox.enablePlasmaBrowserIntegration = true;
               };
-              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redflake";
@@ -529,10 +517,8 @@
               user = "redflake";
               isKVM = false;
               nixpkgsConfig = {
-                allowUnfree = true;
                 firefox.enablePlasmaBrowserIntegration = true;
               };
-              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redflake";
@@ -551,12 +537,10 @@
               isKVM = false;
               includeTuxedo = true;
               nixpkgsConfig = {
-                allowUnfree = true;
                 firefox.enablePlasmaBrowserIntegration = true;
                 nvidia.acceptLicense = true;
                 cudaSupport = true;
               };
-              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "pascal";
@@ -573,10 +557,6 @@
               hostConfig = ./nixos/hosts/vps/default.nix;
               user = "redcloud";
               isKVM = true;
-              nixpkgsConfig = {
-                allowUnfree = true;
-              };
-              extraModules = [ ];
               homeManagerConfigs = [
                 {
                   user = "redcloud";
@@ -593,12 +573,10 @@
               hostConfig = ./nixos/hosts/redline/default.nix;
               user = "let";
               isKVM = false;
+              includeSpicetify = true;
               nixpkgsConfig = {
-                allowUnfree = true;
                 firefox.enablePlasmaBrowserIntegration = true;
               };
-              extraModules = [ ];
-              includeSpicetify = true;
               homeManagerConfigs = [
                 {
                   user = "let";
@@ -617,12 +595,9 @@
               localeProfile = "uk";
               isKVM = false;
               nixpkgsConfig = {
-                allowUnfree = true;
                 rocmSupport = true;
                 firefox.enablePlasmaBrowserIntegration = true;
               };
-              extraModules = [ ];
-              includeSpicetify = false;
               homeManagerConfigs = [
                 {
                   user = "shanzem";
