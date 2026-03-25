@@ -650,17 +650,5 @@
     # Stable DRM symlinks for KWin/SDDM Wayland (avoid ':' in names; KWIN_DRM_DEVICES uses ':' as a separator)
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
-
-    # All NVMe SSDs: no scheduler (ZFS has its own I/O pipeline; double-scheduling adds CPU overhead)
-    ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*", ENV{DEVTYPE}=="disk", \
-      ATTR{queue/scheduler}="none", \
-      ATTR{queue/rq_affinity}="2", \
-      ATTR{queue/read_ahead_kb}="128"
-
-    # ZFS partitions on NVMe: Re-apply parent block-layer settings (handles pool changes)
-    ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*p*", ENV{ID_FS_TYPE}=="zfs_member", \
-      ATTR{../queue/scheduler}="none", \
-      ATTR{../queue/rq_affinity}="2", \
-      ATTR{../queue/read_ahead_kb}="128"
   '';
 }

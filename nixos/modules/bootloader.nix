@@ -12,19 +12,7 @@ in
 # NOTE: zfs datasets are created via install.sh
 {
   boot = {
-
-    # Set kernel parameters
-    kernelParams = [
-      "quiet"
-      "splash"
-      "mitigations=off"
-      "libahci.ignore_sss=1"
-      "sysrq_always_enabled=1"
-      "split_lock_detect=off"
-      "audit=0"
-      "net.ifnames=0"
-      "biosdevname=0"
-    ];
+    # Kernel parameters are now set per-host in each host's hardware.nix
 
     # Kernel selection is handled by `custom.kernel.*` (see `nixos/modules/kernel.nix`).
 

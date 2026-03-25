@@ -45,15 +45,14 @@
   services.timesyncd.enable = true;
 
   # Schedulers from https://wiki.archlinux.org/title/improving_performance
+  # NVMe scheduler is set in base.nix; only need HDD/SSD rules here
   services.udev.extraRules = ''
-    # Needed for ZFS. Otherwise the system can freeze
-    ACTION=="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
+    # ZFS partitions on SATA: disable scheduler (ZFS has its own I/O pipeline)
+    ACTION=="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
     # HDD
     ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
-    # SSD
+    # SSD (SATA)
     ACTION=="add|change", KERNEL=="sd[a-z]*|mmcblk[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="bfq"
-    # NVMe SSD (low-latency scheduler)
-    ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="none"
   '';
 
 }
