@@ -145,8 +145,8 @@
       "intel_rapl_msr" # help UCCD see TDP hardware
       "tuxedo_keyboard"
       "tuxedo_io"
-      #"efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
-      #"ramoops" # RAM-based oops/panic logger (fallback)
+      "efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
+      "ramoops" # RAM-based oops/panic logger (fallback)
       #"netconsole" # Network console for remote kernel log capture
     ];
     extraModulePackages = with config.boot.kernelPackages; [
@@ -284,6 +284,9 @@
       "net.ifnames=0"
       "biosdevname=0"
 
+      # Make any kernel oops (not just a lockup) trigger a full panic
+      "panic_on_oops=1"
+
       # Timer/clock optimizations
       #"tsc=reliable"
       #"clocksource=tsc"
@@ -313,7 +316,7 @@
 
       # Ramoops: RAM-based crash logger (fallback if EFI pstore unavailable)
       # Increased buffer sizes for verbose debug logging (8MB total)
-      #options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
+      options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
 
       # Netconsole: Send kernel logs over network for real-time capture
       # Configure at runtime with: modprobe netconsole netconsole=@/wlan0,6666@<RECEIVER_IP>/
@@ -330,14 +333,19 @@
 
   # Pstore/ramoops: Capture kernel crash logs across reboots
   # Logs are stored in /sys/fs/pstore/ after a crash
-  /* fileSystems."/sys/fs/pstore" = {
+  fileSystems."/sys/fs/pstore" = {
     device = "pstore";
     fsType = "pstore";
     options = [ "defaults" ];
-  }; */
+  };
+
+  # persist pstore logs
+  environment.persistence."/persist".directories = [
+    "/var/log/pstore"
+  ];
 
   # Systemd service to archive pstore crash logs on boot
-  /* systemd.services.pstore-archive = {
+  systemd.services.pstore-archive = {
     description = "Archive pstore crash logs";
     wantedBy = [ "multi-user.target" ];
     after = [ "local-fs.target" ];
@@ -369,13 +377,13 @@
         fi
       '';
     };
-  }; */
+  };
 
   # Netconsole: Real-time kernel log streaming over network
   # Usage: On receiver machine, run: nc -u -l -p 6666
   # Then on this machine: sudo systemctl start netconsole@<RECEIVER_IP>
   # Example: sudo systemctl start netconsole@192.168.1.100
-  /* systemd.services."netconsole@" = {
+  systemd.services."netconsole@" = {
     description = "Netconsole kernel log streaming to %i";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
@@ -412,14 +420,14 @@
         }
       '';
     };
-  }; */
+  };
 
   # Mount configfs for dynamic netconsole configuration
-  /* fileSystems."/sys/kernel/config" = {
+  fileSystems."/sys/kernel/config" = {
     device = "configfs";
     fsType = "configfs";
     options = [ "defaults" ];
-  }; */
+  };
 
   hardware = {
     # enable firmware with a license allowing redistribution

@@ -199,8 +199,11 @@ _:
 
     # Disable watchdogs for performance (~1W savings, reduced latency)
     # Re-enable temporarily if debugging system freezes
-    "kernel.nmi_watchdog" = 0;
-    "kernel.watchdog" = 0;
+    "kernel.nmi_watchdog" = 1;
+    "kernel.watchdog" = 1;
+
+    # Make any kernel oops (not just a lockup) trigger a full panic
+    "kernel.panic_on_oops" = 1;
 
     # Leave timer migration at the default (helps keep timers on housekeeping CPUs and avoids
     # concentrating timer work on a subset of cores).
