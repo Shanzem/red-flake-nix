@@ -128,7 +128,8 @@
       "mei" # Make sure MEI is up before xe tries to talk to GSC
       "mei_me"
       "mei_gsc_proxy"
-      "xe"
+      #"xe"
+      "i915"
     ];
     blacklistedKernelModules = [
       "nouveau" # prevent conflicts with nvidia driver
@@ -164,8 +165,8 @@
       # See: https://www.tuxedocomputers.com/en/Power-management-with-suspend-for-current-hardware.tuxedo
 
       # Intel Xe / i915 binding for Meteor Lake / Arrow Lake
-      "i915.force_probe=!7d67" # Prevent old i915 driver from binding this GPU
-      "xe.force_probe=7d67" # Force the new xe driver to bind the Meteor Lake device (PCI ID 7d67)
+      #"i915.force_probe=!7d67" # Prevent old i915 driver from binding this GPU
+      #"xe.force_probe=7d67" # Force the new xe driver to bind the Meteor Lake device (PCI ID 7d67)
 
       # Intel i915: Disable Display Power Savings
       "i915.enable_fbc=0"
@@ -173,9 +174,9 @@
       "i915.enable_dc=0"
 
       # Intel Xe: Quiet the FBC/PSR noise / flicker; Disable xe DC states
-      "xe.enable_fbc=0"
-      "xe.enable_psr=0"
-      "xe.enable_dc=0"
+      #"xe.enable_fbc=0"
+      #"xe.enable_psr=0"
+      #"xe.enable_dc=0"
       #"xe.enable_sagv=0" # Disable SAGV (System Agent voltage/frequency scaling) for stability
 
       # Intel Xe (i915): Load GuC + HuC
@@ -201,13 +202,13 @@
       # where the Display Microcontroller enters low-power state mid-operation.
       # Fixes: "TLB invalidation fence timeout, seqno=X recv=Y" errors
       # Tradeoff: ~0.2-0.5W higher idle power
-      "xe.enable_dmc_wl=1"
+      #"xe.enable_dmc_wl=1"
       #
       # Disable SAGV (System Agent Geyserville / voltage-frequency scaling)
       # Keeps System Agent at stable frequency to prevent clock request timing races.
       # Fixes: "PHY A failed to request refclk" errors during display state changes
       # Tradeoff: ~0.3-0.5W higher idle power
-      "xe.enable_sagv=0"
+      #"xe.enable_sagv=0"
       # Enable DMC flip queue for better atomic commit coordination (may reduce "Device or resource busy" errors)
       #"xe.enable_flipq=1"
       # Disable Panel Replay / PSR2 selective fetch. Some panels/firmware combos misbehave here.
@@ -224,7 +225,7 @@
       "drm.debug=0x0"
 
       # Intel Xe GuC firmware debug logging (0=off, 1-4=increasing verbosity)
-      "xe.guc_log_level=0"
+      #"xe.guc_log_level=0"
 
       # Kernel log buffer (2MB is enough for reduced logging)
       "log_buf_len=2M"
@@ -296,7 +297,7 @@
     # Keep this minimal: ONLY 'options' lines and no stray prose (avoid multi-line comment blocks that might confuse parsing).
     extraModprobeConfig = ''
       # Make sure MEI is up before xe tries to talk to GSC
-      softdep xe pre: mei_gsc_proxy mei_me mei
+      #softdep xe pre: mei_gsc_proxy mei_me mei
 
       # NOTE: xe does not support i915-style guc_load/enable_guc toggles.
       # Keeping driver defaults; see `modinfo -p xe` for available parameters.
@@ -318,6 +319,9 @@
 
       # TUXEDO keyboard module: set these as module options (NOT kernel cmdline)
       options tuxedo_keyboard kbd_backlight_mode=0
+
+      # asus_wmi is being autoloaded via a WMI GUID match from the ACPI tables. Prevent it from loading.
+      install asus_wmi /bin/true
 
       # ZFS ARC tuning for 96GB RAM
       # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)
@@ -650,17 +654,5 @@
     # Stable DRM symlinks for KWin/SDDM Wayland (avoid ':' in names; KWIN_DRM_DEVICES uses ':' as a separator)
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
-
-    # All NVMe SSDs: no scheduler (ZFS has its own I/O pipeline; double-scheduling adds CPU overhead)
-    ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*", ENV{DEVTYPE}=="disk", \
-      ATTR{queue/scheduler}="none", \
-      ATTR{queue/rq_affinity}="2", \
-      ATTR{queue/read_ahead_kb}="128"
-
-    # ZFS partitions on NVMe: Re-apply parent block-layer settings (handles pool changes)
-    ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme*n*p*", ENV{ID_FS_TYPE}=="zfs_member", \
-      ATTR{../queue/scheduler}="none", \
-      ATTR{../queue/rq_affinity}="2", \
-      ATTR{../queue/read_ahead_kb}="128"
   '';
 }

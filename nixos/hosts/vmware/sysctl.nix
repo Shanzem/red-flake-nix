@@ -60,10 +60,6 @@ _:
     # Sets the maximum number of file descriptors that can be allocated.
     "fs.file-max" = 4194304;
 
-    # Increase writeback interval for xfs
-    # Defines the interval (in centiseconds) at which the XFS kernel threads flush data to disk.
-    "fs.xfs.xfssyncd_centisecs" = 10000; # 100 seconds
-
     # Defines the maximum number of asynchronous I/O requests that can be in progress at a given time.
     "fs.aio-max-nr" = 1000000; # 1 million
 
