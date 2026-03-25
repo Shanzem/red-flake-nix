@@ -69,7 +69,7 @@ _:
 
     # Disable core dumps
     # Redirect core dumps to /dev/null to disable them.
-    "kernel.core_pattern" = "/dev/null";
+    #"kernel.core_pattern" = "/dev/null";
 
     # Increase the sched_rt_runtime_us to mitigate issues:
     # sched: RT throttling activated

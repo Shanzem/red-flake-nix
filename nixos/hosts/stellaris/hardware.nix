@@ -156,9 +156,6 @@
 
     # TUXEDO-specific: kernel parameters
     kernelParams = [
-      # Force Tuxedo I/O driver
-      "tuxedo_io.force=1"
-
       # ACPI / keyboard
       "acpi_enforce_resources=lax" # Allow legacy driver access to ACPI resources; fixes non-compliant SW_LID implementations on some laptops
 
@@ -283,9 +280,6 @@
       # Classic network interface naming (eth0, wlan0)
       "net.ifnames=0"
       "biosdevname=0"
-
-      # Make any kernel oops (not just a lockup) trigger a full panic
-      "panic_on_oops=1"
 
       # Timer/clock optimizations
       #"tsc=reliable"
@@ -491,14 +485,6 @@
     };
   };
 
-  # SDDM startup: wait for DRM GPU drivers to fully initialize
-  # This works around the race condition where SDDM starts before xe driver is ready
-  # See: https://github.com/sddm/sddm/issues/1917
-  systemd.services.display-manager = {
-    after = [ "systemd-udev-settle.service" ];
-    wants = [ "systemd-udev-settle.service" ];
-  };
-
   # Use Wayland SDDM with kwin_wayland compositor
   # X11 mode has NixOS module bugs (empty CompositorCommand causes sddm-helper-start-wayland crash)
   # Force Intel GPU for the greeter to avoid NVIDIA issues
@@ -609,6 +595,10 @@
 
   # Enable the usbmuxd ("USB multiplexing daemon") service. This daemon is in charge of multiplexing connections over USB to an iOS device.
   services.usbmuxd.enable = true;
+
+  # Disable VirtualBox service to avoid hardware related stability issues
+  virtualisation.virtualbox.host.enable = lib.mkForce false;
+  virtualisation.virtualbox.host.enableExtensionPack = lib.mkForce false;
 
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "iHD"; # Force intel-media-driver; Quick Sync decode/encode

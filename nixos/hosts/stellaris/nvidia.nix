@@ -43,11 +43,6 @@
         # Reduces CPU overhead and latency; helps prevent "PHY refclk" and timing race 
         # conditions on modern PCIe 5.0 buses (Arrow Lake + Blackwell).
         "nvidia.NVreg_EnableMSI=1"
-
-        # Register the driver to receive ACPI events (lid close, AC plug/unplug).
-        # Required for "Dynamic Boost" to properly shift power between CPU and GPU 
-        # and ensures the GPU transitions power states correctly during s2idle.
-        "nvidia.NVreg_RegisterForACPIEvents=1"
         # RTD3 (Runtime D3) Power Management - controls GPU power state while system is awake
         # See: https://download.nvidia.com/XFree86/Linux-x86_64/580.65.06/README/dynamicpowermanagement.html
         #
@@ -200,14 +195,15 @@
     wantedBy = [ "suspend.target" ];
   };
 
-  systemd.services.nvidia-hibernate = {
+  # ZFS injects nohibernate which prevents the system from hibernating. So we don't need the nvidia-hibernate service
+  /*systemd.services.nvidia-hibernate = {
     serviceConfig = {
       Type = "oneshot";
       ExecStart = lib.mkForce "${pkgs.bash}/bin/bash ${config.hardware.nvidia.package}/bin/nvidia-sleep.sh hibernate";
     };
     before = [ "systemd-hibernate.service" ];
     wantedBy = [ "hibernate.target" ];
-  };
+  };*/
 
   systemd.services.nvidia-resume = {
     serviceConfig = {
@@ -216,11 +212,9 @@
     };
     after = [
       "systemd-suspend.service"
-      "systemd-hibernate.service"
     ];
     wantedBy = [
       "suspend.target"
-      "hibernate.target"
     ];
   };
 
