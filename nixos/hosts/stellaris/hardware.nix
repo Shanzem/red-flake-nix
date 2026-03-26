@@ -168,64 +168,17 @@
       #"i915.force_probe=!7d67" # Prevent old i915 driver from binding this GPU
       #"xe.force_probe=7d67" # Force the new xe driver to bind the Meteor Lake device (PCI ID 7d67)
 
-      # Intel i915: Disable Display Power Savings
+      # Intel i915 params:
       "i915.enable_fbc=0"
       "i915.enable_psr=0"
       "i915.enable_dc=0"
+      "i915.enable_sagv=0" # Disable SAGV (System Agent voltage/frequency scaling) for stability
+      "i915.enable_dmc_wl=1" # Prevent the Display Microcontroller from entering low-power state during display operations. May help with the PHY A refclk errors.
+      "i915.enable_panel_replay=0" # Disable Panel Replay / PSR2 selective fetch. Some panels/firmware combos misbehave here. Can cause flicker or timing issues.
+      "i915.enable_psr2_sel_fetch=0" # Disable PSR2 selective fetch. Some panels/firmware combos misbehave here. Can cause flicker or timing issues.
 
-      # Intel Xe: Quiet the FBC/PSR noise / flicker; Disable xe DC states
-      #"xe.enable_fbc=0"
-      #"xe.enable_psr=0"
-      #"xe.enable_dc=0"
-      #"xe.enable_sagv=0" # Disable SAGV (System Agent voltage/frequency scaling) for stability
-
-      # Intel Xe (i915): Load GuC + HuC
-      # Force Xe driver to load GuC + HuC (bitmask: 1=GuC submission, 2=HuC → 3=both)
-      #"xe.guc_load=3"
-      "i915.enable_guc=3" # Same bitmask (GuC+HuC)
-
-      # Intel Xe: Quiet GuC firmware logs
-      #"xe.guc_log_level=0"
-
-      # Intel Xe: Disable verbose HW state warnings (hides non-fatal TLB WARN_ON)
-      #"xe.verbose_state_checks=0"
-
-      # Intel Xe: Keep the driver default wedged policy (avoids kernel taint from wedged_mode=0)
-
-      # Quiet Intel Xe DRM debug kernel log spam (TLB/PHY refclk issues...)
-      #"drm.debug=0x0"
-
-      # Workarounds for Intel Xe TLB invalidation fence timeouts / PHY refclk errors
-      # Symptoms: "TLB invalidation fence timeout" and "PHY A failed to request refclk" in dmesg
-      #
-      # DMC Wakelock: Hold wakelock during TLB operations to prevent race conditions
-      # where the Display Microcontroller enters low-power state mid-operation.
-      # Fixes: "TLB invalidation fence timeout, seqno=X recv=Y" errors
-      # Tradeoff: ~0.2-0.5W higher idle power
-      #"xe.enable_dmc_wl=1"
-      #
-      # Disable SAGV (System Agent Geyserville / voltage-frequency scaling)
-      # Keeps System Agent at stable frequency to prevent clock request timing races.
-      # Fixes: "PHY A failed to request refclk" errors during display state changes
-      # Tradeoff: ~0.3-0.5W higher idle power
-      #"xe.enable_sagv=0"
-      # Enable DMC flip queue for better atomic commit coordination (may reduce "Device or resource busy" errors)
-      #"xe.enable_flipq=1"
-      # Disable Panel Replay / PSR2 selective fetch. Some panels/firmware combos misbehave here.
-      #"xe.enable_panel_replay=0"
-      #"xe.enable_psr2_sel_fetch=0"
-      #"xe.psr_safest_params=1"
-      # Let the driver manage display power wells automatically.
-      # Previously had xe.disable_power_well=0 to keep them on, but this can cause
-      # PHY refclk state inconsistencies during suspend/resume.
-
-      # === GPU DEBUG OPTIONS ===
-      # DRM debug logging (bitmask: 0x1=core, 0x2=driver, 0x4=kms, 0x10=atomic, 0x100=lease, 0x200=vbl)
-      # 0x0 = disabled (default), 0x6 = DRIVER + KMS for debugging
-      "drm.debug=0x0"
-
-      # Intel Xe GuC firmware debug logging (0=off, 1-4=increasing verbosity)
-      #"xe.guc_log_level=0"
+      # Intel i915: Load GuC + HuC
+      "i915.enable_guc=3"
 
       # Kernel log buffer (2MB is enough for reduced logging)
       "log_buf_len=2M"
