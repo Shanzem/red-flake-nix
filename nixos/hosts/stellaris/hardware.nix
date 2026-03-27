@@ -47,7 +47,7 @@
       };
     })
 
-    # Overlay 2: Patch linux-firmware with correct GuC/HuC versions
+    # Overlay 2: Patch linux-firmware with correct GuC/HuC/GSC versions for Arrow Lake
     (final: prev: {
       linux-firmware = prev.linux-firmware.overrideAttrs (oldAttrs: {
         nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ final.zstd ];
@@ -72,6 +72,16 @@
             url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin";
             sha256 = "sha256-PqI/OelGEi0URlZdGgfAhmvz48iBm0MTSSU3HYd8pM0="; # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_huc_gsc.bin" | xargs nix hash to-sri --type sha256
           }} $out/lib/firmware/i915/mtl_huc_gsc.bin
+
+          # GSC (Graphics System Controller) firmware for Arrow Lake
+          # Arrow Lake requires GSC version 102.0.10.1878 or newer (higher than Meteor Lake)
+          # Without this, xe driver causes hard lockups and i915 may have stability issues
+          # See: https://www.phoronix.com/news/Intel-Require-Newer-ARL-GSC
+          rm -f $out/lib/firmware/i915/mtl_gsc_1.bin $out/lib/firmware/i915/mtl_gsc_1.bin.zst 2>/dev/null || true
+          cp ${final.fetchurl {
+            url = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_gsc_1.bin";
+            sha256 = "sha256-Aejiuw6ukOO0RxcDuwTRvROttDNzSA+xC+bxAbh34PM="; # nix-prefetch-url "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_gsc_1.bin" | xargs nix hash to-sri --type sha256
+          }} $out/lib/firmware/i915/mtl_gsc_1.bin
         '';
       });
     })
@@ -576,9 +586,8 @@
     # Increase safety margin to give Xe driver more time for atomic commits (default 1000µs)
     # Higher value = more latency but fewer "Device or resource busy" errors
     #KWIN_DRM_OVERRIDE_SAFETY_MARGIN = "3000";
-    # Silence "atomic commit failed: Device or resource busy" warnings from kwin_drm
-    # These are non-fatal retries that spam the journal; the actual commits succeed on retry
-    QT_LOGGING_RULES = "kwin_drm.warning=false";
+    # NOTE: QT_LOGGING_RULES doesn't work here because kwin_wayland starts before session
+    # variables are loaded. Use environment.etc."xdg/QtProject/qtlogging.ini" instead (below).
     #KWIN_DRM_NO_AMS = "1"; # Disable Atomic Mode Setting entirely; DISABLED: causes slow kwin rendering
     # Force software cursor to avoid hardware cursor plane atomic commits
     #KWIN_FORCE_SW_CURSOR = "1";
@@ -586,6 +595,16 @@
     # Intel iGPU (0000:00:02.0) first, NVIDIA dGPU (0000:02:00.0) second.
     KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";
   };
+
+  # Suppress KWin DRM warnings via Qt logging config file
+  # This is more reliable than QT_LOGGING_RULES env var because kwin_wayland starts
+  # before session variables are loaded (SDDM starts it as the Wayland compositor)
+  # The "atomic commit failed: Device or resource busy" warnings are non-fatal retries
+  # that succeed on retry - normal behavior at 300Hz where timing is tight (3.3ms/frame)
+  environment.etc."xdg/QtProject/qtlogging.ini".text = ''
+    [Rules]
+    kwin_drm.warning=false
+  '';
 
   # HiDPI fixes => https://github.com/NixOS/nixos-hardware/blob/3f7d0bca003eac1a1a7f4659bbab9c8f8c2a0958/common/hidpi.nix
   console.font = lib.mkDefault "${pkgs.terminus_font}/share/consolefonts/ter-v32n.psf.gz";
