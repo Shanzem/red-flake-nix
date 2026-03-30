@@ -140,16 +140,16 @@ _:
     # Defines the maximum number of packets that can be queued on the network device input queue.
     "net.core.netdev_max_backlog" = 65536;
 
-    # Default socket receive buffer size, improve network performance & applications that use sockets. Adjusted for 8GB RAM.
+    # Default socket receive buffer size, improve network performance & applications that use sockets.
     "net.core.rmem_default" = 1048576; # 1 MB
 
-    # Maximum socket receive buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 8GB RAM.
+    # Maximum socket receive buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 96GB RAM.
     "net.core.rmem_max" = 134217728; # 128 MB
 
-    # Default socket send buffer size, improve network performance & applications that use sockets. Adjusted for 8GB RAM.
+    # Default socket send buffer size, improve network performance & applications that use sockets.
     "net.core.wmem_default" = 1048576; # 1 MB
 
-    # Maximum socket send buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 8GB RAM.
+    # Maximum socket send buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 96GB RAM.
     "net.core.wmem_max" = 134217728; # 128 MB
 
     # Reduce the chances of fragmentation. Adjusted for SSD.

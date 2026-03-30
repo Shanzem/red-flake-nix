@@ -97,7 +97,7 @@ in
       };
       gpu = {
         apply_gpu_optimisations = "accept-responsibility"; # Allow GPU tweaks
-        gpu_device = 1; # Use discrete GPU (card1 = NVIDIA); see: => /sys/class/drm/card1/device/
+        gpu_device = 0; # Use discrete GPU (card0 = NVIDIA); see: /sys/class/drm/card0/device/
       };
       custom = {
         start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
