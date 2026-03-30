@@ -147,6 +147,7 @@
       # TUXEDO platform conflicts
       "uniwill_laptop" # prevent conflicts with tuxedo_keyboard and tuxedo_io
       "asus_wmi" # prevent conflicts with tuxedo_keyboard and tuxedo_io
+      "eeepc_wmi" # gets autoloaded by WMI GUIDs; spams "Unknown symbol ... asus_wmi_*" if asus_wmi is blocked
 
       # Hardware-specific issues
       "spd5118" # causes resume errors: spd5118_resume returns -6
@@ -166,6 +167,13 @@
       "snd_seq_dummy" # ALSA sequencer dummy - not doing MIDI
       "autofs4" # automounting - not using autofs service
       "dmi_sysfs" # DMI sysfs interface - not needed
+
+      # Input: legacy emulation (optional)
+      "joydev" # joystick/gamepad events via /dev/input/js*
+      "mousedev" # PS/2 mouse emulation via /dev/input/mouse*
+
+      # CPU thermal: aggressive idle injection (optional)
+      "intel_powerclamp"
     ];
     kernelModules = [
       "kvm-intel"
@@ -286,6 +294,7 @@
       # asus_wmi is being autoloaded via a WMI GUID match from the ACPI tables. Prevent it from loading.
       # Note: /bin/true doesn't exist in NixOS, use /run/current-system/sw/bin/true
       install asus_wmi /run/current-system/sw/bin/true
+      install eeepc_wmi /run/current-system/sw/bin/true
 
       # ZFS ARC tuning for 96GB RAM
       # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)
