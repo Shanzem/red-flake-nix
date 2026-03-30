@@ -74,12 +74,6 @@
   };
 
   hardware = {
-    # enable firmware with a license allowing redistribution
-    enableRedistributableFirmware = lib.mkForce true;
-
-    # enable all firmware regardless of license
-    enableAllFirmware = lib.mkForce true;
-
     # enable CPU microcode updates
     cpu.amd.updateMicrocode = true;
 
@@ -125,8 +119,6 @@
   environment.etc."OpenCL/vendors/amdocl64.icd".text =
     "${pkgs.rocmPackages.clr.icd}/lib/libamdocl64.so ";
 
-  services.fstrim.enable = true;
-
   # Recommended to explicitly declare video driver for Xorg and fallback support
   services.xserver.videoDrivers = [ "amdgpu" ];
 
@@ -136,44 +128,28 @@
       ROCM_PATH = "${pkgs.rocmPackages.rocm-runtime}";
     };
 
-  environment.systemPackages = with pkgs;
-    [
-      vulkan-tools
-      mesa-demos
-      radeontop # AMD GPU utilization monitor
-      lm_sensors # For temperature sensors
-      pciutils
+  environment.systemPackages = with pkgs; [
+    # GPU tools
+    vulkan-tools
+    mesa-demos
+    radeontop # AMD GPU utilization monitor
+    lm_sensors # For temperature sensors
+    pciutils
+    clinfo # Verify OpenCL setup
 
-      # ------------------------------------------------
-      # ---- ROCM Packages
-      # ------------------------------------------------
-      rocmPackages.clr
-      rocmPackages.hip-common
-      rocmPackages.hipblas
-      rocmPackages.hipcc
-      rocmPackages.hipcub
-      rocmPackages.hipfft
-      rocmPackages.hipify
-      rocmPackages.hiprand
-      rocmPackages.rocm-runtime
-      rocmPackages.rocminfo
+    # ROCm packages
+    rocmPackages.clr
+    rocmPackages.hip-common
+    rocmPackages.hipblas
+    rocmPackages.hipcc
+    rocmPackages.hipcub
+    rocmPackages.hipfft
+    rocmPackages.hipify
+    rocmPackages.hiprand
+    rocmPackages.rocm-runtime
+    rocmPackages.rocminfo
+    rocmPackages.rocm-smi
+    rocmPackages.rocm-cmake
+  ];
 
-      # ROCm Application for Reporting System Info
-      rocmPackages.rocminfo
-
-      # System management interface for AMD GPUs supported by ROCm
-      rocmPackages.rocm-smi
-
-      # Platform runtime for ROCm
-      rocmPackages.rocm-runtime
-
-      # CMake modules for common build tasks for the ROCm stack
-      rocmPackages.rocm-cmake
-
-      # You should also install the clinfo package to verify that OpenCL is correctly setup (or check in the program you use to see if it is now available, such as in Darktable).
-      clinfo
-    ];
-
-  # Allow firmware Updates
-  services.fwupd.enable = true;
 }

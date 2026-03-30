@@ -252,8 +252,8 @@ in
   };
 
   # TRIM settings
-  # Enable periodic TRIM
-  services.fstrim.enable = true;
+  # Note: For ZFS, use services.zfs.trim.enable (set above) instead of fstrim.
+  # fstrim doesn't work on ZFS mountpoints - ZFS handles TRIM internally.
 
   # DBus settings
   services.dbus = {

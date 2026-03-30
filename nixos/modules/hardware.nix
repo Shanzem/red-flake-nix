@@ -2,6 +2,11 @@
 , ...
 }:
 {
+  # Enable firmware by default for all hosts
+  config = {
+    hardware.enableRedistributableFirmware = lib.mkDefault true;
+    hardware.enableAllFirmware = lib.mkDefault true;
+  };
 
   options.custom = {
 

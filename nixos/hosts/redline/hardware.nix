@@ -64,12 +64,6 @@
   };
 
   hardware = {
-    # enable firmware with a license allowing redistribution
-    enableRedistributableFirmware = lib.mkForce true;
-
-    # enable all firmware regardless of license
-    enableAllFirmware = lib.mkForce true;
-
     # enable CPU microcode updates
     cpu.intel.updateMicrocode = true;
 
@@ -87,8 +81,6 @@
     };
   };
 
-  services.fstrim.enable = true;
-
   # Recommended to explicitly declare video driver for Xorg and fallback support
   services.xserver.videoDrivers = [ "amdgpu" ];
 
@@ -103,6 +95,4 @@
     pciutils
   ];
 
-  # Allow firmware Updates
-  services.fwupd.enable = true;
 }
