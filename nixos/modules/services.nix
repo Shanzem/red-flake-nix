@@ -254,6 +254,8 @@ in
   # TRIM settings
   # Note: For ZFS, use services.zfs.trim.enable (set above) instead of fstrim.
   # fstrim doesn't work on ZFS mountpoints - ZFS handles TRIM internally.
+  # Disable fstrim timer since we use ZFS (which has its own zpool-trim.timer)
+  services.fstrim.enable = false;
 
   # DBus settings
   services.dbus = {
@@ -292,6 +294,19 @@ in
 
   # Make nixos boot slightly faster by turning these off during boot
   systemd.services.NetworkManager-wait-online.enable = false;
+
+  # =============================================================================
+  # Disabled services - to re-enable, remove or comment out the corresponding line
+  # =============================================================================
+
+  # Note: acpid is kept enabled - NVIDIA driver uses it for battery/power events on laptops
+  # Note: nscd cannot be disabled - required for systemd NSS modules (DynamicUser services)
+
+  # Disable ModemManager: Manages mobile broadband (3G/4G/LTE) modems and SMS
+  # Used by: USB mobile broadband dongles, some phones in modem mode
+  # Re-enable if: You need to use a USB cellular modem for internet
+  # Note: NetworkManager pulls this in by default, we explicitly disable it
+  systemd.services.ModemManager.enable = false;
 
   # Schedulers from https://wiki.archlinux.org/title/improving_performance
   # NVMe scheduler is set in base.nix; only need HDD/SSD rules here
