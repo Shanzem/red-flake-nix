@@ -39,4 +39,46 @@ _:
       WantedBy = [ "plasma-core.target" ];
     };
   };
+
+  # =============================================================================
+  # Disabled services - to re-enable, remove or comment out the corresponding block
+  # =============================================================================
+
+  # KDE Discover notifier: Shows software update notifications in system tray
+  # Used by: Notifying about available package/flatpak updates
+  # Re-enable if: You want automatic update notifications
+  xdg.configFile."autostart/org.kde.discover.notifier.desktop".text = ''
+    [Desktop Entry]
+    Hidden=true
+  '';
+
+  # Geoclue agent: Provides location services (GPS/WiFi-based geolocation)
+  # Used by: Weather widgets, Maps, location-aware apps
+  # Re-enable if: Apps can't detect your location or weather widgets show wrong location
+  xdg.configFile."autostart/geoclue-demo-agent.desktop".text = ''
+    [Desktop Entry]
+    Hidden=true
+  '';
+
+  # Plasma KAccess: KDE accessibility features (sticky keys, slow keys, bounce keys)
+  # Used by: Accessibility keyboard features, visual bell, screen reader integration
+  # Re-enable if: Accessibility keyboard shortcuts or features stop working
+  xdg.configFile."autostart/kaccess.desktop".text = ''
+    [Desktop Entry]
+    Hidden=true
+  '';
+
+  # AT-SPI D-Bus bus: Accessibility services bus for screen readers, magnifiers, etc.
+  # Used by: Orca screen reader, accessibility tools, some automation tools
+  # Re-enable if: Screen reader stops working or accessibility features break
+  # Note: This is started via dbus activation, disabling autostart may not fully stop it
+  xdg.configFile."autostart/at-spi-dbus-bus.desktop".text = ''
+    [Desktop Entry]
+    Hidden=true
+  '';
+
+  # Note on OBEX (Bluetooth file transfer):
+  # obex.service is socket-activated by bluetooth when a file transfer is initiated.
+  # It cannot be fully disabled via autostart - it will start on-demand when needed.
+  # This is fine as it only runs during active Bluetooth file transfers.
 }
