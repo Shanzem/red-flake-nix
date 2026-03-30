@@ -125,30 +125,47 @@
 
   boot = {
     initrd.availableKernelModules = [
-      "zfs"
-      "xhci_pci"
-      "thunderbolt"
-      "nvme"
-      "usb_storage"
-      "usbhid"
-      "sd_mod"
-      "ahci"
+      "zfs" # ZFS root with encryption
+      "nvme" # NVMe boot drive
+      "xhci_pci" # USB 3.x controller
+      "usbhid" # USB keyboard (backup for ZFS password entry)
     ];
     initrd.kernelModules = [
-      "mei" # Make sure MEI is up before xe tries to talk to GSC
+      # MEI modules for i915 HuC authentication and GSC firmware (hardware video accel)
+      # Load before i915 so GSC is ready when i915 initializes
+      "mei"
       "mei_me"
       "mei_gsc_proxy"
-      #"xe"
       "i915"
     ];
     blacklistedKernelModules = [
+      # NVIDIA conflicts
       "nouveau" # prevent conflicts with nvidia driver
       "nvidiafb"
       "rivafb"
-      #"i915" # don't blacklist i915. i915.force_probe=!7d67 already prevents i915 from binding to the iGPU
-      "spd5118" # blacklist to avoid these issues: [  146.522972] spd5118 14-0050: Failed to write b = 0: -6    [  146.522974] spd5118 14-0050: PM: dpm_run_callback(): spd5118_resume [spd5118] returns -6     [  146.522978] spd5118 14-0050: PM: failed to resume async: error -6
+
+      # TUXEDO platform conflicts
       "uniwill_laptop" # prevent conflicts with tuxedo_keyboard and tuxedo_io
       "asus_wmi" # prevent conflicts with tuxedo_keyboard and tuxedo_io
+
+      # Hardware-specific issues
+      "spd5118" # causes resume errors: spd5118_resume returns -6
+
+      # Intel GPU: use i915, not xe (saves 4.5MB RAM)
+      "xe"
+
+      # Not needed on Intel systems
+      "qrtr" # Qualcomm IPC Router - not needed on Intel
+
+      # Legacy/unused ACPI modules
+      "acpi_pad" # legacy processor aggregator - not needed on modern Intel
+
+      # Unused subsystems
+      "mac_hid" # HID emulation for non-HID devices - not needed
+      "intel_vpu" # Arrow Lake NPU - not using AI acceleration
+      "snd_seq_dummy" # ALSA sequencer dummy - not doing MIDI
+      "autofs4" # automounting - not using autofs service
+      "dmi_sysfs" # DMI sysfs interface - not needed
     ];
     kernelModules = [
       "kvm-intel"
@@ -156,13 +173,10 @@
       "intel_rapl_msr" # help UCCD see TDP hardware
       "tuxedo_keyboard"
       "tuxedo_io"
-      "efi_pstore" # EFI-based pstore backend for crash logs (uses UEFI variables)
-      "ramoops" # RAM-based oops/panic logger (fallback)
-      #"netconsole" # Network console for remote kernel log capture
     ];
     extraModulePackages = with config.boot.kernelPackages; [
       tuxedo-drivers # TUXEDO-specific drivers
-      r8125 # Realtek 2.5GbE Ethernet driver
+      # r8125 removed - r8169 (in-kernel) works fine for RTL8125 2.5GbE
     ];
 
     # TUXEDO-specific: kernel parameters
@@ -232,9 +246,6 @@
       # Security mitigations off for performance (use only on trusted single-user systems)
       "mitigations=off"
 
-      # AHCI: skip staggered spin-up for faster boot
-      "libahci.ignore_sss=1"
-
       # Enable SysRq key for debugging/recovery
       "sysrq_always_enabled=1"
 
@@ -259,12 +270,6 @@
     # --- extra kernel module options (goes into /etc/modprobe.d/nixos.conf) ---#
     # Keep this minimal: ONLY 'options' lines and no stray prose (avoid multi-line comment blocks that might confuse parsing).
     extraModprobeConfig = ''
-      # Make sure MEI is up before xe tries to talk to GSC
-      #softdep xe pre: mei_gsc_proxy mei_me mei
-
-      # NOTE: xe does not support i915-style guc_load/enable_guc toggles.
-      # Keeping driver defaults; see `modinfo -p xe` for available parameters.
-
       # Virtualization
       options kvm_intel nested=1
 
@@ -272,13 +277,8 @@
       options iwlmvm power_scheme=1
       options iwlwifi power_save=0 uapsd_disable=1
 
-      # Ramoops: RAM-based crash logger (fallback if EFI pstore unavailable)
-      # Increased buffer sizes for verbose debug logging (8MB total)
-      options ramoops mem_size=8388608 console_size=4194304 pmsg_size=1048576 ftrace_size=1048576
-
-      # Netconsole: Send kernel logs over network for real-time capture
-      # Configure at runtime with: modprobe netconsole netconsole=@/wlan0,6666@<RECEIVER_IP>/
-      # Or use the systemd service below for dynamic configuration
+      # i915: ensure MEI is up before i915 tries to authenticate HuC via GSC
+      softdep i915 pre: mei mei_me mei_gsc_proxy
 
       # TUXEDO keyboard module: set these as module options (NOT kernel cmdline)
       options tuxedo_keyboard kbd_backlight_mode=0
@@ -291,104 +291,6 @@
       # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)
       options zfs zfs_arc_max=17179869184
     '';
-  };
-
-  # Pstore/ramoops: Capture kernel crash logs across reboots
-  # Logs are stored in /sys/fs/pstore/ after a crash
-  fileSystems."/sys/fs/pstore" = {
-    device = "pstore";
-    fsType = "pstore";
-    options = [ "defaults" ];
-  };
-
-  # persist pstore logs
-  environment.persistence."/persist".directories = [
-    "/var/log/pstore"
-  ];
-
-  # Systemd service to archive pstore crash logs on boot
-  systemd.services.pstore-archive = {
-    description = "Archive pstore crash logs";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "local-fs.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "pstore-archive" ''
-        PSTORE_DIR="/sys/fs/pstore"
-        ARCHIVE_DIR="/var/log/pstore"
-
-        # Create archive directory if it doesn't exist
-        mkdir -p "$ARCHIVE_DIR"
-
-        # Check if there are any files to archive
-        if [ -n "$(ls -A $PSTORE_DIR 2>/dev/null)" ]; then
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          CRASH_DIR="$ARCHIVE_DIR/$TIMESTAMP"
-          mkdir -p "$CRASH_DIR"
-
-          # Copy all pstore files to archive
-          cp -a "$PSTORE_DIR"/* "$CRASH_DIR"/ 2>/dev/null || true
-
-          # Clear pstore after archiving
-          for f in "$PSTORE_DIR"/*; do
-            [ -e "$f" ] && rm -f "$f" 2>/dev/null || true
-          done
-
-          echo "Archived pstore crash logs to $CRASH_DIR"
-        fi
-      '';
-    };
-  };
-
-  # Netconsole: Real-time kernel log streaming over network
-  # Usage: On receiver machine, run: nc -u -l -p 6666
-  # Then on this machine: sudo systemctl start netconsole@<RECEIVER_IP>
-  # Example: sudo systemctl start netconsole@192.168.1.100
-  systemd.services."netconsole@" = {
-    description = "Netconsole kernel log streaming to %i";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "netconsole-start" ''
-        TARGET_IP="$1"
-        # Find default interface and local IP
-        IFACE=$(${pkgs.iproute2}/bin/ip route get "$TARGET_IP" | ${pkgs.gawk}/bin/awk '/dev/ {print $5; exit}')
-        LOCAL_IP=$(${pkgs.iproute2}/bin/ip route get "$TARGET_IP" | ${pkgs.gawk}/bin/awk '/src/ {print $7; exit}')
-        # Get target MAC (send a ping first to populate ARP cache)
-        ${pkgs.iputils}/bin/ping -c1 -W1 "$TARGET_IP" >/dev/null 2>&1 || true
-        TARGET_MAC=$(${pkgs.iproute2}/bin/ip neigh show "$TARGET_IP" | ${pkgs.gawk}/bin/awk '{print $5; exit}')
-        [ -z "$TARGET_MAC" ] && TARGET_MAC="ff:ff:ff:ff:ff:ff"
-
-        # Configure netconsole dynamically via configfs
-        NETCON_DIR="/sys/kernel/config/netconsole/target1"
-        mkdir -p "$NETCON_DIR"
-        echo "$IFACE" > "$NETCON_DIR/dev_name"
-        echo "$LOCAL_IP" > "$NETCON_DIR/local_ip"
-        echo 6665 > "$NETCON_DIR/local_port"
-        echo "$TARGET_IP" > "$NETCON_DIR/remote_ip"
-        echo 6666 > "$NETCON_DIR/remote_port"
-        echo "$TARGET_MAC" > "$NETCON_DIR/remote_mac"
-        echo 1 > "$NETCON_DIR/enabled"
-        echo "Netconsole streaming to $TARGET_IP:6666 via $IFACE ($LOCAL_IP)"
-      '' + " %i";
-      ExecStop = pkgs.writeShellScript "netconsole-stop" ''
-        NETCON_DIR="/sys/kernel/config/netconsole/target1"
-        [ -d "$NETCON_DIR" ] && {
-          echo 0 > "$NETCON_DIR/enabled" 2>/dev/null || true
-          rmdir "$NETCON_DIR" 2>/dev/null || true
-        }
-      '';
-    };
-  };
-
-  # Mount configfs for dynamic netconsole configuration
-  fileSystems."/sys/kernel/config" = {
-    device = "configfs";
-    fsType = "configfs";
-    options = [ "defaults" ];
   };
 
   hardware = {
@@ -430,26 +332,6 @@
     tuxedo-control-center = {
       enable = false; # Disable original TUXEDO Control Center via tuxedo-nixos
       package = inputs.tuxedo-nixos.packages.x86_64-linux.default;
-    };
-  };
-
-  # Intel Xe suspend preparation: ensure DRM operations complete before suspend
-  # This prevents KWin from getting stuck in drm_open during the freeze phase
-  # when the Xe driver has pending PHY/refclk operations
-  systemd.services.xe-suspend-prep = {
-    description = "Prepare Intel Xe GPU for suspend";
-    before = [ "systemd-suspend.service" "systemd-hibernate.service" ];
-    wantedBy = [ "suspend.target" "hibernate.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = pkgs.writeShellScript "xe-suspend-prep" ''
-        # Sync filesystem to ensure no pending IO
-        sync
-        
-        # Brief delay to let Xe driver complete any pending PHY/display operations
-        # This helps avoid the "PHY A failed to request refclk" race during suspend
-        sleep 2
-      '';
     };
   };
 
@@ -514,17 +396,6 @@
   #};
 
   services.xserver = {
-    # For Wayland (KDE), prevent kwin_wayland from using NVIDIA by default.
-    # This forces it to use Intel instead, which is more stable and power-efficient
-    displayManager.sessionCommands = ''
-      export LIBVA_DRIVER_NAME=iHD
-      export VDPAU_DRIVER=va_gl
-      export MESA_LOADER_DRIVER_OVERRIDE=iris
-      export __GLX_VENDOR_LIBRARY_NAME=mesa
-      export ANV_ENABLE_PIPELINE_CACHE=1
-      # NIXOS_OZONE_WL is set system-wide in nixos/modules/kde.nix
-    '';
-
     # Enable Intel & NVIDIA driver in XServer
     videoDrivers = [
       "modesetting"
