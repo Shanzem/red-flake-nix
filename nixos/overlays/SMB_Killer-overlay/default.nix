@@ -1,17 +1,17 @@
 # SMB_Killer-overlay.nix
 # https://github.com/Red-Flake/SMB_Killer
 
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  SMB_Killer = super.stdenv.mkDerivation rec {
+  SMB_Killer = prev.stdenv.mkDerivation rec {
     pname = "SMB_Killer";
     version = "unstable-2024-10-24"; # Use the date as version
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "SMB_Killer";
       rev = "06f1807df0e1cf3f125305d9eeaa1af5005c189c"; # (commit hash)
@@ -19,12 +19,12 @@ in
     };
 
     nativeBuildInputs = [
-      super.python3Packages.setuptools
+      prev.python3Packages.setuptools
     ];
 
     # Use python3.withPackages to create the Python environment
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         colorama
       ]))
     ];

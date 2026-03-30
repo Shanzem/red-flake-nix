@@ -1,10 +1,10 @@
 # powerview-py-overlay.nix
-_self: super: {
-  powerview-py = super.python312Packages.buildPythonPackage rec {
+_: prev: {
+  powerview-py = prev.python312Packages.buildPythonPackage rec {
     pname = "powerview-py";
     version = "2025.0.4";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "aniqfakhrul";
       repo = "powerview.py";
       rev = "cfb51cbbfe7adc1ccc4fceb2c81cc8ff73829c0b";
@@ -13,12 +13,12 @@ _self: super: {
 
     format = "pyproject";
 
-    nativeBuildInputs = with super.python312Packages; [
+    nativeBuildInputs = with prev.python312Packages; [
       poetry-core
       setuptools
     ];
 
-    propagatedBuildInputs = with super.python312Packages; [
+    propagatedBuildInputs = with prev.python312Packages; [
       impacket
       ldap3-bleeding-edge
       dnspython
@@ -45,7 +45,7 @@ _self: super: {
 
     doCheck = false; # Skipping tests if none exist or fail due to missing dependencies
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "Python implementation of PowerView from PowerSploit";
       homepage = "https://github.com/aniqfakhrul/powerview.py";
       license = licenses.mit;

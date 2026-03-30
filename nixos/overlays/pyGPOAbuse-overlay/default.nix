@@ -1,14 +1,14 @@
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  pyGPOAbuse = super.stdenv.mkDerivation rec {
+  pyGPOAbuse = prev.stdenv.mkDerivation rec {
     pname = "pyGPOAbuse";
     version = "unstable-2024-11-27"; # Use the date as version
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "pyGPOAbuse";
       rev = "9dc995ea0c7f866ee1d7307f9005ad3216fbaf3f"; # (commit hash)
@@ -24,7 +24,7 @@ in
 
     # Use setuptools to properly install the package and create entry points
     buildInputs = [
-      (super.python312.withPackages (ps: with ps; [
+      (prev.python312.withPackages (ps: with ps; [
         msldap
         impacket
       ]))

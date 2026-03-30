@@ -1,16 +1,16 @@
 # smtp-user-enum-overlay.nix
 
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  smtp-user-enum = super.stdenv.mkDerivation rec {
+  smtp-user-enum = prev.stdenv.mkDerivation rec {
     pname = "smtp-user-enum";
     version = "unstable-2023-04-03"; # Use the date as version
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "cytopia";
       repo = "smtp-user-enum";
       rev = "758d60268733b00d9b18d510ede3dabd1fab3294"; # (commit hash)
@@ -18,11 +18,11 @@ in
     };
 
     nativeBuildInputs = [
-      super.python3Packages.setuptools
+      prev.python3Packages.setuptools
     ];
 
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         dnspython
       ]))
     ];

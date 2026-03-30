@@ -1,12 +1,12 @@
 # kerbrute-overlay.nix
-_self: super:
+_: prev:
 
 {
-  kerbrute = super.stdenv.mkDerivation rec {
+  kerbrute = prev.stdenv.mkDerivation rec {
     pname = "kerbrute";
     version = "1.0.3";
 
-    src = super.fetchurl {
+    src = prev.fetchurl {
       url = "https://github.com/ropnop/kerbrute/releases/download/v${version}/kerbrute_linux_amd64";
       sha256 = "sha256-cQqdJlPIvTaJ5FF3jaudrsDeTEx1+QB4jM8j7yVLEio="; # Replace this with the correct hash
     };
@@ -19,7 +19,7 @@ _self: super:
       install -m755 $src $out/bin/kerbrute
     '';
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "A tool to perform Kerberos brute force attacks";
       homepage = "https://github.com/ropnop/kerbrute";
       license = licenses.asl20;

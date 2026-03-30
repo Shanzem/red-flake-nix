@@ -59,10 +59,8 @@ let
   fullDesktopModules = baseDesktopModules ++ desktopEnvModules ++ securityModules;
 
   # Common session variables for desktop users
-  commonDesktopSessionVars = {
-    MOZ_ENABLE_WAYLAND = 1;
-    XCURSOR_SIZE = "24";
-  };
+  # Note: MOZ_ENABLE_WAYLAND, NIXOS_OZONE_WL, XCURSOR_SIZE are set system-wide in nixos/modules/kde.nix
+  commonDesktopSessionVars = { };
 
   # Common session path for all users
   commonSessionPath = [

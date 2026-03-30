@@ -1,15 +1,15 @@
 # bloodhound-quickwin-overlay.nix
 # https://github.com/Red-Flake/bloodhound-quickwin
 
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
-  inherit (super) python313;
-  inherit (super) python313Packages;
-  inherit (super) fetchFromGitHub;
+  inherit (prev) lib;
+  inherit (prev) python313;
+  inherit (prev) python313Packages;
+  inherit (prev) fetchFromGitHub;
 
-  pansi = super.python313Packages.buildPythonPackage rec {
+  pansi = prev.python313Packages.buildPythonPackage rec {
     pname = "pansi";
     version = "2024.11.0"; # Use the appropriate version
 
@@ -18,17 +18,17 @@ let
       setuptools # Required for setup.py
     ];
 
-    src = super.fetchPypi {
+    src = prev.fetchPypi {
       inherit pname version;
       sha256 = "018186294f012ae48e207d9446b1bd22b0f2ebb2de60a6c4fb079abfacdf4a37";
     };
 
-    propagatedBuildInputs = with super.python313Packages; [
+    propagatedBuildInputs = with prev.python313Packages; [
       pillow
     ];
   };
 
-  interchange = super.python313Packages.buildPythonPackage rec {
+  interchange = prev.python313Packages.buildPythonPackage rec {
     pname = "interchange";
     version = "2021.0.4"; # Use the appropriate version
 
@@ -37,18 +37,18 @@ let
       setuptools # Required for setup.py
     ];
 
-    src = super.fetchPypi {
+    src = prev.fetchPypi {
       inherit pname version;
       sha256 = "6791d1b34621e990035fe75d808523172340d80ade1b50412226820184199550";
     };
 
-    propagatedBuildInputs = with super.python313Packages; [
+    propagatedBuildInputs = with prev.python313Packages; [
       pytz
       six
     ];
   };
 
-  py2neo = super.python313Packages.buildPythonPackage rec {
+  py2neo = prev.python313Packages.buildPythonPackage rec {
     pname = "py2neo";
     version = "2021.2.4"; # Correct version
 
@@ -57,12 +57,12 @@ let
       setuptools # Required for setup.py
     ];
 
-    src = super.fetchPypi {
+    src = prev.fetchPypi {
       inherit pname version;
       sha256 = "sha256-Syc3/Nn9jYK1foVt5O2gBSgcnPB0HJieUlJnjwUD934=";
     };
 
-    propagatedBuildInputs = with super.python313Packages; [
+    propagatedBuildInputs = with prev.python313Packages; [
       certifi
       chardet
       urllib3
@@ -82,7 +82,7 @@ let
 
 in
 {
-  bloodhound-quickwin = super.stdenv.mkDerivation rec {
+  bloodhound-quickwin = prev.stdenv.mkDerivation rec {
     pname = "bloodhound-quickwin";
     version = "unstable-2024-11-12"; # Use the date as version
 

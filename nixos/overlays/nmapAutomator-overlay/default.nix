@@ -1,20 +1,20 @@
 # nmapAutomator-overlay.nix
-_self: super: {
-  nmapAutomator = super.stdenv.mkDerivation rec {
+_: prev: {
+  nmapAutomator = prev.stdenv.mkDerivation rec {
     pname = "nmapAutomator";
     version = "1.0";
 
     # Fetch the script from GitHub
-    src = super.fetchurl {
+    src = prev.fetchurl {
       url = "https://raw.githubusercontent.com/Red-Flake/nmapAutomator/refs/heads/master/nmapAutomator.sh";
       sha256 = "sha256-fcjTULv06C9+aMLTcZTeeejXEqqnE1/SymHzvQbjjAU="; # nix-prefetch-url "https://raw.githubusercontent.com/Red-Flake/nmapAutomator/refs/heads/master/nmapAutomator.sh" | xargs nix hash to-sri --type sha256
     };
 
     # Runtime dependencies
     buildInputs = [
-      super.nmap
-      #super.toybox        # tests fail...
-      super.gawk
+      prev.nmap
+      #prev.toybox        # tests fail...
+      prev.gawk
     ];
 
     # Skip unpacking since this is a plain script
@@ -36,13 +36,13 @@ _self: super: {
     # Use wrapProgram in postInstallPhase
     postInstall = ''
       # Wrap nmapAutomator with its environment
-      wrapProgram $out/bin/nmapAutomator --set NMAP_PATH ${super.nmap}
+      wrapProgram $out/bin/nmapAutomator --set NMAP_PATH ${prev.nmap}
 
       # Wrap nmap.sh with the same environment
-      wrapProgram $out/bin/nmap.sh --set NMAP_PATH ${super.nmap}
+      wrapProgram $out/bin/nmap.sh --set NMAP_PATH ${prev.nmap}
     '';
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "A script that you can run in the background!";
       homepage = "https://github.com/Red-Flake/nmapAutomator";
       license = licenses.mit;

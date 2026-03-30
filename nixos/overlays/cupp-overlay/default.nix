@@ -1,14 +1,14 @@
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  cupp = super.stdenv.mkDerivation rec {
+  cupp = prev.stdenv.mkDerivation rec {
     pname = "cupp";
     version = "3.3.0"; # matches __version__ in cupp.py
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Mebus";
       repo = "cupp";
       rev = "56547fd09b87613cb2614feb5b7688907277a65a";
@@ -18,13 +18,13 @@ in
     # We just copy a script; no build needed
     dontBuild = true;
 
-    nativeBuildInputs = [ super.python3 ];
+    nativeBuildInputs = [ prev.python3 ];
 
     installPhase = ''
       mkdir -p $out/bin
 
       # Rewrite the shebang so it points at Nix’s Python
-      sed "1s|.*|#!${super.python3.interpreter} -W ignore::SyntaxWarning|" \
+      sed "1s|.*|#!${prev.python3.interpreter} -W ignore::SyntaxWarning|" \
         ${src}/cupp.py > $out/bin/cupp
       chmod +x $out/bin/cupp
 

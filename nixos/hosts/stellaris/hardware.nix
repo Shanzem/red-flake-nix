@@ -521,10 +521,7 @@
       export MESA_LOADER_DRIVER_OVERRIDE=iris
       export __GLX_VENDOR_LIBRARY_NAME=mesa
       export ANV_ENABLE_PIPELINE_CACHE=1
-      export NIXOS_OZONE_WL=1
-
-      # Don't set PRIME/NVIDIA variables globally - let apps default to Intel
-      # Steam and other apps can override these as needed
+      # NIXOS_OZONE_WL is set system-wide in nixos/modules/kde.nix
     '';
 
     # Enable Intel & NVIDIA driver in XServer
@@ -573,7 +570,7 @@
     MESA_LOADER_DRIVER_OVERRIDE = "iris"; # Xe OpenGL/Vulkan (not anv; iris=Gen12+)
     __GLX_VENDOR_LIBRARY_NAME = "mesa"; # Mesa GLX (avoid Nouveau/NVIDIA proprietary)
     ANV_ENABLE_PIPELINE_CACHE = "1"; # Enable Vulkan pipeline caching; Vulkan cache speedup
-    NIXOS_OZONE_WL = "1"; # Hint Electron/Chromium apps to use Wayland natively
+    # NIXOS_OZONE_WL is set system-wide in nixos/modules/kde.nix
     # mesa_glthread = "true"; # Disabled: causes KWin CPU spikes with Intel Xe driver
     # Don't set PRIME/NVIDIA variables globally - let apps default to Intel
     # Steam and other apps can override these as needed

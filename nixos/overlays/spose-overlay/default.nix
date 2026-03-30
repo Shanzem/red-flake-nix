@@ -1,14 +1,14 @@
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  spose = super.stdenv.mkDerivation rec {
+  spose = prev.stdenv.mkDerivation rec {
     pname = "spose";
     version = "unstable-2024-11-27"; # Use the date as version
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "spose";
       rev = "978d5f17d85a6eaf2b3647f197eea450751429ef"; # (commit hash)
@@ -24,7 +24,7 @@ in
 
     # Use setuptools to properly install the package and create entry points
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         colorama
       ]))
     ];

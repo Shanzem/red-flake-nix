@@ -1,9 +1,9 @@
 # apachetomcatscanner-overlay.nix
-_self: super: {
+_: prev: {
 
   apachetomcatscanner =
     let
-      python = super.python313;
+      python = prev.python313;
       # Pin urllib3 to 1.26.18 ( <2 )
       urllib3 = python.pkgs.urllib3.overrideAttrs (_old: {
         version = "1.26.18";
@@ -55,7 +55,7 @@ _self: super: {
       version = "git-ad1271c4"; # Custom version for the commit
       pyproject = true;
 
-      src = super.fetchFromGitHub {
+      src = prev.fetchFromGitHub {
         owner = "p0dalirius";
         repo = "ApacheTomcatScanner";
         rev = "ad1271c4c68ba9e9475e9d40b30f766a279c162d";
@@ -83,8 +83,8 @@ _self: super: {
       meta = {
         description = "Tool to scan for Apache Tomcat server vulnerabilities";
         homepage = "https://github.com/p0dalirius/ApacheTomcatScanner";
-        license = super.lib.licenses.gpl2Only;
-        maintainers = with super.lib.maintainers; [ fab ];
+        license = prev.lib.licenses.gpl2Only;
+        maintainers = with prev.lib.maintainers; [ fab ];
         mainProgram = "apachetomcatscanner";
       };
     };

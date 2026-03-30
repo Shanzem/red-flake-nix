@@ -1,7 +1,7 @@
 # droopescan-overlay.nix
-self: super: {
+final: prev: {
 
-  python313Packages = super.python313Packages.override {
+  python313Packages = prev.python313Packages.override {
     overrides = _pySelf: pySuper: {
       cement = pySuper.cement.overrideAttrs (old: rec {
         version = "2.10.14";
@@ -13,7 +13,7 @@ self: super: {
         checkPhase = "true";
         installCheckPhase = "true";
         pytestCheckPhase = "true";
-        src = super.fetchPypi {
+        src = prev.fetchPypi {
           pname = "cement";
           inherit version;
           extension = "tar.gz";
@@ -23,11 +23,11 @@ self: super: {
     };
   };
 
-  droopescan = self.python313Packages.buildPythonApplication rec {
+  droopescan = final.python313Packages.buildPythonApplication rec {
     pname = "droopescan";
     version = "unstable-2025-07-07"; # Adjust to a tag or date if preferred
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "droopescan";
       rev = "bada60fa447f35b570913f85c7cf4fadd6b3eb34";
@@ -38,10 +38,10 @@ self: super: {
     format = "setuptools";
 
     # Add setuptools for the build backend
-    nativeBuildInputs = [ self.python313Packages.setuptools ];
+    nativeBuildInputs = [ final.python313Packages.setuptools ];
 
     # Dependencies from requirements.txt/public info; add more if your fork has extras (e.g., futures for Python 2 compat)
-    propagatedBuildInputs = with self.python313Packages; [
+    propagatedBuildInputs = with final.python313Packages; [
       setuptools
       cement
       requests
@@ -55,7 +55,7 @@ self: super: {
     pytestCheckPhase = "true";
     pythonImportsCheckPhase = "true";
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "A plugin-based scanner for identifying issues in CMS like Drupal and SilverStripe";
       homepage = "https://github.com/Red-Flake/droopescan";
       license = licenses.agpl3Only;

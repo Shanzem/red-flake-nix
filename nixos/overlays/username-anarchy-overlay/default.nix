@@ -1,11 +1,11 @@
 # username-anarchy-overlay.nix
-_self: super:
+_: prev:
 
 {
-  username-anarchy = super.username-anarchy.overrideAttrs (oldAttrs: rec {
+  username-anarchy = prev.username-anarchy.overrideAttrs (oldAttrs: rec {
     version = "0.6";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       rev = "v0.6"; # v0.6
       owner = "urbanadventurer";
       repo = "username-anarchy";

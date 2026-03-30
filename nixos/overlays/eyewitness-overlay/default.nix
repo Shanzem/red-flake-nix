@@ -1,14 +1,14 @@
 # eyewitness-overlay.nix
-_self: super:
+_: prev:
 let
-  xorgserverPkg = super.xorgserver or super.xorg.xorgserver;
-  xvfbPkg = super.xvfb or xorgserverPkg;
-  xvfbRunPkg = super."xvfb-run" or (super.xorg."xvfb-run" or xorgserverPkg);
+  xorgserverPkg = prev.xorgserver or prev.xorg.xorgserver;
+  xvfbPkg = prev.xvfb or xorgserverPkg;
+  xvfbRunPkg = prev."xvfb-run" or (prev.xorg."xvfb-run" or xorgserverPkg);
 in
 {
-  python3Packages = super.python3Packages.override {
-    overrides = _pself: psuper: {
-      pyvirtualdisplay = psuper.pyvirtualdisplay.overrideAttrs (_old: {
+  python3Packages = prev.python3Packages.override {
+    overrides = _pself: pprev: {
+      pyvirtualdisplay = pprev.pyvirtualdisplay.overrideAttrs (_old: {
         postPatch = ''
           substituteInPlace pyvirtualdisplay/xvfb.py \
             --replace '"Xvfb"' '"${xvfbPkg}/bin/Xvfb"'
@@ -19,7 +19,7 @@ in
     };
   };
 
-  eyewitness = super.eyewitness.overrideAttrs (old: {
+  eyewitness = prev.eyewitness.overrideAttrs (old: {
     dependencies = old.dependencies or [ ] ++ [ xvfbPkg ];
 
     postPatch = ''
@@ -33,10 +33,10 @@ in
     fixupPhase = ''
       runHook preFixup
 
-      makeWrapper "${super.python3Packages.python.interpreter}" "$out/bin/eyewitness" \
+      makeWrapper "${prev.python3Packages.python.interpreter}" "$out/bin/eyewitness" \
         --set PYTHONPATH "$PYTHONPATH" \
         --add-flags "$out/share/eyewitness/Python/EyeWitness.py" \
-        --prefix PATH : "${super.lib.makeBinPath [ xvfbPkg super.geckodriver super.firefox-bin xvfbRunPkg ]}"
+        --prefix PATH : "${prev.lib.makeBinPath [ xvfbPkg prev.geckodriver prev.firefox-bin xvfbRunPkg ]}"
 
       runHook postFixup
     '';

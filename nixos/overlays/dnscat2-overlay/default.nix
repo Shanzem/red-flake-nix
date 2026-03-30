@@ -1,11 +1,11 @@
 # dnscat2-overlay.nix
-_self: super: {
-  dnscat2 = super.stdenv.mkDerivation rec {
+_: prev: {
+  dnscat2 = prev.stdenv.mkDerivation rec {
     pname = "dnscat2";
     version = "0.07";
 
     # Fetch the dnscat2 repository from GitHub.
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "dnscat2";
       rev = "95af647b6a8d2ad20027a8d2bd200acfd00f1cf0";
@@ -13,9 +13,9 @@ _self: super: {
     };
 
     nativeBuildInputs = [
-      super.ruby
-      super.bundler
-      super.makeWrapper
+      prev.ruby
+      prev.bundler
+      prev.makeWrapper
     ];
 
     # Use Bundler to install the gem dependencies locally.
@@ -37,12 +37,12 @@ _self: super: {
       export GEM_PATH=$out/app/vendor/bundle
       export BUNDLE_GEMFILE=$out/app/server/Gemfile
       export BUNDLE_PATH=$out/app/vendor/bundle
-      exec ${super.ruby}/bin/ruby -rbundler/setup $out/app/server/dnscat2.rb "\$@"
+      exec ${prev.ruby}/bin/ruby -rbundler/setup $out/app/server/dnscat2.rb "\$@"
       EOF
         chmod +x $out/bin/dnscat2
     '';
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "dnscat2: A DNS tunneling tool written in Ruby";
       homepage = "https://github.com/Red-Flake/dnscat2";
       license = licenses.bsd3;

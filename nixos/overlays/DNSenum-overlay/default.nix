@@ -1,5 +1,5 @@
 # DNSenum-overlay.nix
-_self: super:
+_: prev:
 
 let
   # Fetch an older Nixpkgs revision with Perl 5.34
@@ -28,8 +28,8 @@ let
 
 in
 {
-  dnsenum = super.dnsenum.overrideAttrs (_oldAttrs: {
-    buildInputs = with super.perlPackages // oldPkgs.perlPackages; [
+  dnsenum = prev.dnsenum.overrideAttrs (_oldAttrs: {
+    buildInputs = with prev.perlPackages // oldPkgs.perlPackages; [
       perl-5_34
       oldPkgs.perlPackages.NetWhoisIP
       oldPkgs.perlPackages.WWWMechanize
@@ -69,7 +69,7 @@ in
       sed -i 's/\~\~/=~/g' dnsenum.pl
     '';
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       homepage = "https://github.com/fwaeytens/dnsenum";
       description = "Tool to enumerate DNS information";
       mainProgram = "dnsenum";

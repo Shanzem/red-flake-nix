@@ -1,11 +1,11 @@
 # joomla-brute-overlay.nix
-self: super: {
+final: prev: {
 
-  joomla-brute = self.python312Packages.buildPythonApplication rec {
+  joomla-brute = final.python312Packages.buildPythonApplication rec {
     pname = "joomla-brute";
     version = "unstable-2020-01-07"; # Based on last commit date; adjust if needed
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "ajnik";
       repo = "joomla-bruteforce";
       rev = "f2f347d5e9f84fc4ec7d5bfc82fc6e4cd63a2057";
@@ -16,7 +16,7 @@ self: super: {
     format = "other";
 
     # Runtime dependencies based on script imports
-    propagatedBuildInputs = with self.python312Packages; [
+    propagatedBuildInputs = with final.python312Packages; [
       requests
       beautifulsoup4
     ];
@@ -31,16 +31,16 @@ self: super: {
     installPhase = ''
       mkdir -p $out/bin $out/share/joomla-brute
       install -m755 joomla-brute.py $out/share/joomla-brute/joomla-brute.py
-      makeWrapper ${self.python312.withPackages (_ps: propagatedBuildInputs)}/bin/python3 $out/bin/joomla-brute \
+      makeWrapper ${final.python312.withPackages (_ps: propagatedBuildInputs)}/bin/python3 $out/bin/joomla-brute \
         --add-flags $out/share/joomla-brute/joomla-brute.py
-      makeWrapper ${self.python312.withPackages (_ps: propagatedBuildInputs)}/bin/python3 $out/bin/joomla-brute.py \
+      makeWrapper ${final.python312.withPackages (_ps: propagatedBuildInputs)}/bin/python3 $out/bin/joomla-brute.py \
         --add-flags $out/share/joomla-brute/joomla-brute.py
     '';
 
     # No tests to run
     doCheck = false;
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "A Joomla login bruteforce tool";
       homepage = "https://github.com/ajnik/joomla-bruteforce";
       license = licenses.mit; # Assume MIT based on typical repos; repo does not contain any license

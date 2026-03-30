@@ -1,14 +1,14 @@
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  xssstrike = super.stdenv.mkDerivation rec {
+  xssstrike = prev.stdenv.mkDerivation rec {
     pname = "XSStrike";
     version = "3.1.6";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "s0md3v";
       repo = "XSStrike";
       rev = "3.1.6";
@@ -18,10 +18,10 @@ in
     # We just copy a script; no build needed
     dontBuild = true;
 
-    nativeBuildInputs = [ super.python3 ];
+    nativeBuildInputs = [ prev.python3 ];
 
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         tld
         fuzzywuzzy
         requests

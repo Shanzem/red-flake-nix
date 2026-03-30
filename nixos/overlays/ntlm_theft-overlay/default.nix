@@ -1,15 +1,15 @@
 # ntlm_theft-overlay.nix
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  ntlm_theft = super.stdenv.mkDerivation rec {
+  ntlm_theft = prev.stdenv.mkDerivation rec {
     pname = "ntlm_theft";
     version = "1.0.0";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Red-Flake";
       repo = "ntlm_theft";
       rev = "7dfcf567f29f5d848b1eda5671037912c3f61d5a"; # Use a specific commit hash or tag for reproducibility
@@ -17,7 +17,7 @@ in
     };
 
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         xlsxwriter
       ]))
     ];
@@ -26,7 +26,7 @@ in
 
     postInstall = ''
       wrapProgram $out/bin/ntlm_theft \
-        --prefix PYTHONPATH : "$out/${super.python3Packages.python.sitePackages}"
+        --prefix PYTHONPATH : "$out/${prev.python3Packages.python.sitePackages}"
     '';
 
     installPhase = ''

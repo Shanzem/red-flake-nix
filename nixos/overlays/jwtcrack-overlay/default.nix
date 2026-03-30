@@ -1,16 +1,16 @@
 # jwtcrack-overlay.nix
 # https://github.com/Sjord/jwtcrack
-_self: super:
+_: prev:
 
 let
-  inherit (super) lib;
+  inherit (prev) lib;
 in
 {
-  jwtcrack = super.stdenv.mkDerivation rec {
+  jwtcrack = prev.stdenv.mkDerivation rec {
     pname = "jwtcrack";
     version = "unstable-2023-01-10";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "Sjord";
       repo = "jwtcrack";
       rev = "e9b170f7e0d48079790bbd10341437307f9a52cc";
@@ -18,7 +18,7 @@ in
     };
 
     buildInputs = [
-      (super.python3.withPackages (ps: with ps; [
+      (prev.python3.withPackages (ps: with ps; [
         pyjwt
         tqdm
       ]))

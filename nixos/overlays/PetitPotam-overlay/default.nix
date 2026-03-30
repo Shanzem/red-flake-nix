@@ -1,11 +1,11 @@
 # PetitPotam-overlay.nix
 
-_self: super:
+_: prev:
 let
-  inherit (super) lib;
-  inherit (super) stdenv;
-  inherit (super) fetchFromGitHub;
-  inherit (super) python312;
+  inherit (prev) lib;
+  inherit (prev) stdenv;
+  inherit (prev) fetchFromGitHub;
+  inherit (prev) python312;
 in
 {
   petitpotam = stdenv.mkDerivation rec {

@@ -1,10 +1,10 @@
 # PKINITtools-overlay.nix
 
-_self: super:
+_: prev:
 let
-  inherit (super) lib;
-  inherit (super) stdenv;
-  inherit (super) fetchFromGitHub;
+  inherit (prev) lib;
+  inherit (prev) stdenv;
+  inherit (prev) fetchFromGitHub;
 in
 {
   pkinittools = stdenv.mkDerivation rec {
@@ -20,7 +20,7 @@ in
 
     # Use setuptools to properly install the package and create entry points
     buildInputs = [
-      (super.python312.withPackages (ps: with ps; [
+      (prev.python312.withPackages (ps: with ps; [
         impacket
         minikerberos
         oscrypto

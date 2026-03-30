@@ -1,11 +1,11 @@
 # john-overlay.nix
-_self: super:
+_: prev:
 
 let
-  inherit (super) fetchFromGitHub;
+  inherit (prev) fetchFromGitHub;
 in
 {
-  john = super.john.overrideAttrs (old: {
+  john = prev.john.overrideAttrs (old: {
     version = "unstable-2025-06-15";
 
     src = fetchFromGitHub {
@@ -16,7 +16,7 @@ in
     };
 
     propagatedBuildInputs = old.propagatedBuildInputs ++ [
-      super.python3Packages.pyhanko
+      prev.python3Packages.pyhanko
     ];
 
     # Remove the opencl.patch

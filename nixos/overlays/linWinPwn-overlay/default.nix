@@ -1,5 +1,5 @@
 # linWinPwn-overlay.nix
-self: super:
+final: prev:
 
 let
   # Fetch tools using URLs
@@ -80,7 +80,7 @@ let
   fetchTools = builtins.map
     (
       tool:
-      super.fetchurl {
+      prev.fetchurl {
         inherit (tool) url;
         inherit (tool) sha256;
       }
@@ -89,11 +89,11 @@ let
 
   # Define Python packages
   # Define textract manually
-  textract = self.stdenv.mkDerivation rec {
+  textract = final.stdenv.mkDerivation rec {
     pname = "textract";
     version = "latest";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "tehabstract";
       repo = "textract";
       rev = "0c80ff5727061587442fc5a1886c668d53e8d16d";
@@ -121,16 +121,16 @@ let
     meta = {
       description = "Text extraction library for various file formats";
       homepage = "https://github.com/tehabstract/textract";
-      license = super.lib.licenses.mit;
+      license = prev.lib.licenses.mit;
     };
   };
 
   # Define manspider with textract as a built input
-  manspider = self.stdenv.mkDerivation rec {
+  manspider = final.stdenv.mkDerivation rec {
     pname = "manspider";
     version = "1.0.4";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "blacklanternsecurity";
       repo = "MANSPIDER";
       rev = "30ce682f1ec521c47596a2bccd20131ab4ca0e4a";
@@ -172,14 +172,14 @@ let
     meta = {
       description = "Full-featured SMB spider capable of searching file content";
       homepage = "https://github.com/blacklanternsecurity/MANSPIDER";
-      license = super.lib.licenses.gpl3;
+      license = prev.lib.licenses.gpl3;
     };
   };
 
   mssqlrelay = python3Packages.buildPythonPackage rec {
     pname = "mssqlrelay";
     version = "latest";
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "CompassSecurity";
       repo = "mssqlrelay";
       rev = "bd764b9ba2be25374f26d277bebae54eb1be00b2";
@@ -192,7 +192,7 @@ let
     meta = {
       description = "MS SQL relay utility for pentesting.";
       homepage = "https://github.com/CompassSecurity/mssqlrelay";
-      license = super.lib.licenses.gpl2;
+      license = prev.lib.licenses.gpl2;
     };
   };
 
@@ -200,7 +200,7 @@ let
     pname = "adcheck";
     version = "1.5.0";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "CobblePot59";
       repo = "ADcheck";
       rev = "8fcb15e7cc5d5ade86fcf745eb204d13ca8ba8ef";
@@ -229,14 +229,14 @@ let
     meta = {
       description = "Active Directory checker tool.";
       homepage = "https://github.com/CobblePot59/ADcheck";
-      license = super.lib.licenses.mit;
+      license = prev.lib.licenses.mit;
     };
   };
 
   adpeas = python3Packages.buildPythonPackage rec {
     pname = "adPEAS";
     version = "latest";
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "ajm4n";
       repo = "adPEAS";
       rev = "bda3e0c01b61320e51d592e04fa01e82c0c2d440";
@@ -249,13 +249,13 @@ let
     meta = {
       description = "Active Directory post-exploitation enumeration tool.";
       homepage = "https://github.com/ajm4n/adPEAS";
-      license = super.lib.licenses.asl20;
+      license = prev.lib.licenses.asl20;
     };
   };
 
-  mssqlpwner = super.poetry2nix.mkPoetryApplication {
+  mssqlpwner = prev.poetry2nix.mkPoetryApplication {
     python = python3;
-    projectDir = super.fetchFromGitHub {
+    projectDir = prev.fetchFromGitHub {
       owner = "ScorpionesLabs";
       repo = "MSSqlPwner";
       rev = "a30f41f191d542695e9e19bcc711e2dd1af85abd";
@@ -267,7 +267,7 @@ let
     pname = "bloodhound-python_ce";
     version = "latest";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "dirkjanm";
       repo = "BloodHound.py";
       rev = "093be56a3ff4a0529b5029a31a254f989acc3476"; # branch: bloodhound-ce
@@ -289,19 +289,19 @@ let
     meta = {
       description = "BloodHound Python for Active Directory enumeration and analysis (Community Edition)";
       homepage = "https://github.com/dirkjanm/BloodHound.py/tree/bloodhound-ce";
-      license = super.lib.licenses.mit;
+      license = prev.lib.licenses.mit;
     };
   };
 
-  python3 = super.python312.override {
-    packageOverrides = python-self: python-super: {
-      ldap3 = python-super.ldap3.overrideAttrs (oldAttrs: rec {
-        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ python-super.pycryptodome ];
+  python3 = prev.python312.override {
+    packageOverrides = _: python-prev: {
+      ldap3 = python-prev.ldap3.overrideAttrs (oldAttrs: rec {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ python-prev.pycryptodome ];
       });
 
       # Optionally, override ldapdomaindump if needed
-      ldapdomaindump = python-super.ldapdomaindump.overrideAttrs (oldAttrs: rec {
-        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ python-self.ldap3 ];
+      ldapdomaindump = python-prev.ldapdomaindump.overrideAttrs (oldAttrs: rec {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ python-final.ldap3 ];
       });
     };
   };
@@ -314,11 +314,11 @@ in
   # Use `python3` from `self` (overridden)
   inherit python3;
 
-  linWinPwn = self.stdenv.mkDerivation rec {
+  linWinPwn = final.stdenv.mkDerivation rec {
     pname = "linWinPwn";
     version = "latest";
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "lefayjey";
       repo = "linWinPwn";
       rev = "d6226338a77da7af802249aa1da89bb7e71a5492";
@@ -326,12 +326,12 @@ in
     };
 
     nativeBuildInputs = [
-      self.makeWrapper
-      self.unzip
+      final.makeWrapper
+      final.unzip
       python3Packages.pip
       python3Packages.setuptools
       python3Packages.virtualenv
-      self.git
+      final.git
     ];
 
     buildInputs = [
@@ -356,29 +356,29 @@ in
       mssqlpwner
       bloodhound-python_ce
       manspider
-      self.nmap
-      self.smbmap
-      self.john
-      self.swig
-      self.openssl
-      self.curl
-      self.jq
-      self.netexec
-      self.adidnsdump
-      self.certipy
-      self.ldeep
-      self.pre2k
-      self.certsync
-      self.coercer
-      self.donpapi
-      self.rdwatool
-      self.krbjack
-      self.breads-ad
-      self.smbclient-ng
-      self.hekatomb
-      self.enum4linux-ng
-      self.evil-winrm
-      self.util-linux
+      final.nmap
+      final.smbmap
+      final.john
+      final.swig
+      final.openssl
+      final.curl
+      final.jq
+      final.netexec
+      final.adidnsdump
+      final.certipy
+      final.ldeep
+      final.pre2k
+      final.certsync
+      final.coercer
+      final.donpapi
+      final.rdwatool
+      final.krbjack
+      final.breads-ad
+      final.smbclient-ng
+      final.hekatomb
+      final.enum4linux-ng
+      final.evil-winrm
+      final.util-linux
     ];
 
     installPhase = ''
@@ -394,7 +394,7 @@ in
       chmod +x $out/bin/linWinPwn
 
       # Copy tools to the scripts directory
-      ${self.lib.concatStringsSep "\n" (
+      ${final.lib.concatStringsSep "\n" (
         map (tool: ''
           cp ${tool} $out/bin/${tool.name}
           chmod +x $out/bin/${tool.name}
@@ -408,18 +408,18 @@ in
       # Wrap the main linWinPwn script
       wrapProgram $out/bin/linWinPwn \
         --set PATH "${
-          self.lib.makeBinPath (
+          final.lib.makeBinPath (
             [
-              self.toybox
-              self.which
-              self.iproute2
-              self.gnused
+              final.toybox
+              final.which
+              final.iproute2
+              final.gnused
               python3
-              self.gnugrep
-              self.gawk
-              self.util-linux
-              self.sudo
-              self.findutils
+              final.gnugrep
+              final.gawk
+              final.util-linux
+              final.sudo
+              final.findutils
               mssqlrelay
               adcheck
               adpeas
@@ -433,29 +433,29 @@ in
               python3Packages.requests
               python3Packages.bloodhound-py
               python3Packages.bloodyad
-              self.nmap
-              self.smbmap
-              self.john
-              self.swig
-              self.openssl
-              self.curl
-              self.jq
-              self.netexec
-              self.adidnsdump
-              self.certipy
-              self.ldeep
-              self.pre2k
-              self.certsync
-              self.coercer
-              self.donpapi
-              self.rdwatool
-              self.krbjack
-              self.breads-ad
-              self.smbclient-ng
-              self.hekatomb
-              self.enum4linux-ng
-              self.certi
-              self.evil-winrm
+              final.nmap
+              final.smbmap
+              final.john
+              final.swig
+              final.openssl
+              final.curl
+              final.jq
+              final.netexec
+              final.adidnsdump
+              final.certipy
+              final.ldeep
+              final.pre2k
+              final.certsync
+              final.coercer
+              final.donpapi
+              final.rdwatool
+              final.krbjack
+              final.breads-ad
+              final.smbclient-ng
+              final.hekatomb
+              final.enum4linux-ng
+              final.certi
+              final.evil-winrm
             ]
             ++ fetchTools
           )
@@ -468,7 +468,7 @@ in
     meta = {
       description = "Swiss-Army knife for Active Directory Pentesting using Linux";
       homepage = "https://github.com/lefayjey/linWinPwn";
-      license = super.lib.licenses.gpl3Plus;
+      license = prev.lib.licenses.gpl3Plus;
     };
   };
 

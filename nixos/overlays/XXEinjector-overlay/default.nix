@@ -1,18 +1,18 @@
 # XXEinjector-overlay.nix
-_self: super: {
+_: prev: {
 
-  xxeinjector = super.stdenv.mkDerivation rec {
+  xxeinjector = prev.stdenv.mkDerivation rec {
     pname = "XXEinjector";
     version = "unstable-2020-08-27"; # Based on the last commit date; the repo hasn't been updated since
 
-    src = super.fetchFromGitHub {
+    src = prev.fetchFromGitHub {
       owner = "enjoiz";
       repo = "XXEinjector";
       rev = "68d2e8e6cbad0ab1b2774646dcdaf469ad7fe213";
       hash = "sha256-TkDcJxjnNfO90rPUxferuijsoM34dtKi/y1YcfNufrY=";
     };
 
-    buildInputs = [ super.ruby ];
+    buildInputs = [ prev.ruby ];
 
     postPatch = ''
       substituteInPlace XXEinjector.rb \
@@ -27,7 +27,7 @@ _self: super: {
       runHook postPatch
     '';
 
-    meta = with super.lib; {
+    meta = with prev.lib; {
       description = "Tool for automatic exploitation of XXE vulnerability using direct and different out of band methods";
       homepage = "https://github.com/enjoiz/XXEinjector";
       license = licenses.mit;
