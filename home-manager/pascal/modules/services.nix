@@ -19,12 +19,24 @@ _:
     };
   };
 
-  # Fix drkonqi-coredump-pickup.service timeout
-  # This KDE crash handler service times out if there are no coredumps to process
-  # Increase the timeout to prevent the "Failed with result 'timeout'" error
+  # Fix drkonqi-coredump-pickup.service - restore the full service definition
+  # Home-manager's systemd.user.services creates a *replacement* file, not a drop-in.
+  # The original drkonqi package service was being replaced with one missing ExecStart.
+  # We must include all required fields from the original service.
   systemd.user.services.drkonqi-coredump-pickup = {
+    Unit = {
+      Description = "Consume pending crashes using DrKonqi";
+      PartOf = [ "graphical-session.target" ];
+      Requires = [ "drkonqi-coredump-launcher.socket" ];
+      After = [ "plasma-core.target" "drkonqi-coredump-launcher.socket" ];
+      ConditionUser = "!@system";
+    };
     Service = {
-      TimeoutStartSec = "5min";
+      ExecStart = "/run/current-system/sw/libexec/drkonqi-coredump-processor --settle-first --pickup --uid %U";
+      RuntimeMaxSec = "30min";
+    };
+    Install = {
+      WantedBy = [ "plasma-core.target" ];
     };
   };
 }

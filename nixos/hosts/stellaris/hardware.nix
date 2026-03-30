@@ -284,7 +284,8 @@
       options tuxedo_keyboard kbd_backlight_mode=0
 
       # asus_wmi is being autoloaded via a WMI GUID match from the ACPI tables. Prevent it from loading.
-      install asus_wmi /bin/true
+      # Note: /bin/true doesn't exist in NixOS, use /run/current-system/sw/bin/true
+      install asus_wmi /run/current-system/sw/bin/true
 
       # ZFS ARC tuning for 96GB RAM
       # Cap ARC at 16GB to leave ~80GB for apps/games (default would use ~48GB)

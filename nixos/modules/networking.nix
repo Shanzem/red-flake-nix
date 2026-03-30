@@ -5,6 +5,10 @@
 }:
 
 {
+  # Disable Avahi mDNS/DNS-SD (not needed for pentesting/gaming setup)
+  # Reduces network broadcast footprint and silences "No NSS support for mDNS" warning
+  services.avahi.enable = false;
+
   # NetworkManager
   networking.networkmanager = {
     enable = true;
