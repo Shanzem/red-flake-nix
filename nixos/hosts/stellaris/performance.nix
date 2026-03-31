@@ -49,7 +49,7 @@
   zramSwap = {
     enable = true;
     algorithm = "lz4";
-    memoryPercent = 100; # Use up to 100% of RAM size for ZRAM (compressed)
+    memoryPercent = 50; # 47GB ZRAM = 94-141GB effective with lz4 ~2-3x compression
     priority = 100; # Higher priority than disk swap
   };
 

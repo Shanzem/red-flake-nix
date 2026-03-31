@@ -399,6 +399,9 @@
   #  };
   #};
 
+  # Disable OS prober - single-boot system, saves ~1-2s loader time
+  boot.loader.grub.useOSProber = lib.mkForce false;
+
   services.xserver = {
     # Enable Intel & NVIDIA driver in XServer
     videoDrivers = [
