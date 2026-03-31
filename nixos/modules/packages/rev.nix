@@ -13,10 +13,6 @@
     jadx
     radare2
     avalonia-ilspy
+    binaryninja-free
   ];
-
-  programs.binary-ninja = {
-    enable = true;
-    package = pkgs.binary-ninja-free-wayland;
-  };
 }
