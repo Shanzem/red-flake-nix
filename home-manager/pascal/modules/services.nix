@@ -83,37 +83,13 @@ _:
   # This is fine as it only runs during active Bluetooth file transfers.
 
   # =============================================================================
-  # Masked services - fully disabled via systemd (autostart hide doesn't stop D-Bus activation)
+  # Disable AT-SPI accessibility bus via environment variable
   # =============================================================================
-
-  # Mask AT-SPI D-Bus bus: Accessibility services bus
-  # The autostart desktop file only prevents session autostart, not D-Bus activation
-  systemd.user.services.at-spi-dbus-bus = {
-    Unit.Description = "Masked: AT-SPI D-Bus Bus";
-    Service = {
-      Type = "oneshot";
-      ExecStart = "/run/current-system/sw/bin/true";
-      RemainAfterExit = true;
-    };
-  };
-
-  # Mask Geoclue agent: Location services
-  systemd.user.services.geoclue-agent = {
-    Unit.Description = "Masked: Geoclue Demo Agent";
-    Service = {
-      Type = "oneshot";
-      ExecStart = "/run/current-system/sw/bin/true";
-      RemainAfterExit = true;
-    };
-  };
-
-  # Mask Plasma KAccess: Accessibility features
-  systemd.user.services.plasma-kaccess = {
-    Unit.Description = "Masked: Plasma Accessibility";
-    Service = {
-      Type = "oneshot";
-      ExecStart = "/run/current-system/sw/bin/true";
-      RemainAfterExit = true;
-    };
+  # This tells GTK/Qt apps to skip AT-SPI entirely rather than waiting for a connection.
+  # Using env vars is the correct approach - masking the systemd service breaks D-Bus
+  # activation and causes apps to hang waiting for timeouts.
+  home.sessionVariables = {
+    NO_AT_BRIDGE = "1"; # Disable AT-SPI bridge (GTK2/GTK3)
+    GTK_A11Y = "none"; # Disable GTK4 accessibility
   };
 }
