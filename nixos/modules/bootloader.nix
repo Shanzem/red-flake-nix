@@ -56,6 +56,10 @@ in
       theme = "redflake-plymouth";
     };
 
+    # Silent boot - suppress kernel messages so Plymouth can display
+    consoleLogLevel = 0;
+    initrd.verbose = false;
+
     # Bootloader settings
     loader = {
       systemd-boot.enable = false;
