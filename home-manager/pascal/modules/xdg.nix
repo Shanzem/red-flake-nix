@@ -1,6 +1,5 @@
 { config
 , lib
-, pkgs
 , ...
 }:
 
@@ -33,25 +32,8 @@ in
     '';
   };
 
-  # enable xdg desktop portal
-  xdg.portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      kdePackages.xdg-desktop-portal-kde
-      xdg-desktop-portal-gtk # Fallback for DPI/apps
-    ];
-    configPackages = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
-    config = {
-      common = {
-        default = [ "kde" "gtk" ];
-      };
-      plasma = {
-        # Matches $XDG_CURRENT_DESKTOP=plasma
-        default = [ "kde" "gtk" ];
-        "org.freedesktop.impl.portal.Inhibit" = [ "kde" ]; # Targets CreateMonitor error
-      };
-    };
-  };
+  # NOTE: xdg.portal is configured at the NixOS level in nixos/modules/xdg.nix
+  # Do NOT configure it here in home-manager to avoid duplicate portal configs
 
   # enable XDG mime
   xdg.mime = {
