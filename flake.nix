@@ -11,7 +11,6 @@
     extra-substituters = [
       "https://cache.nixos.org/"
       "https://nix-community.cachix.org/"
-      "https://claude-code.cachix.org"
       "https://mrn157.cachix.org/"
       "https://cache.garnix.io"
       "https://attic.xuyh0120.win/lantian"
@@ -19,7 +18,6 @@
     extra-trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "claude-code.cachix.org-1:YeXf2aNu7UTX8Vwrze0za1WEDS+4DuI2kVeWEE4fsRk="
       "mrn157.cachix.org-1:A3KuzqTH/AeTFpDsu7Fql7KpZBJvFCkfNqxkL2+DZlc="
       "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
@@ -97,26 +95,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # https://github.com/nix-community/poetry2nix
-    poetry2nix = {
-      url = "github:nix-community/poetry2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # https://github.com/NixOS/nixos-hardware
-    nixos-hardware = {
-      url = "github:NixOS/nixos-hardware/master";
-    };
-
     # https://github.com/pwndbg/pwndbg
     pwndbg = {
       url = "github:pwndbg/pwndbg";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # https://github.com/sund3RRR/tuxedo-nixos
-    tuxedo-nixos = {
-      url = "github:sund3RRR/tuxedo-nixos";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -127,20 +108,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    #Modded Spotify
+    # Modded Spotify
+    # https://github.com/Gerg-L/spicetify-nix
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # https://github.com/FlameFlag/nixcord
     nixcord = {
-      url = "github:kaylorben/nixcord";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # https://github.com/sadjow/claude-code-nix/
-    claude-code = {
-      url = "github:sadjow/claude-code-nix";
+      url = "github:FlameFlag/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -156,12 +133,6 @@
       repo = "Burpsuite-Professional";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # https://github.com/ghostty-org/ghostty
-    ghostty.url = "github:ghostty-org/ghostty/main";
-
-    # https://github.com/mozilla/nixpkgs-mozilla
-    nixpkgs-mozilla.url = "github:mozilla/nixpkgs-mozilla";
 
     # Red-Flake artwork
     artwork = {
@@ -213,7 +184,6 @@
     , redflake-packages
     , ucc
     , darkmatter-grub-theme
-    , tuxedo-nixos
     , spicetify-nix
     , ...
     }:
@@ -458,7 +428,7 @@
                   extraModules =
                     extraModules
                       ++ nixpkgs.lib.optionals includeSpicetify [ spicetify-nix.nixosModules.default ]
-                      ++ nixpkgs.lib.optionals includeTuxedo [ tuxedo-nixos.nixosModules.default ucc.nixosModules.default ];
+                      ++ nixpkgs.lib.optionals includeTuxedo [ ucc.nixosModules.default ];
                 })
               ]
               ++ (map

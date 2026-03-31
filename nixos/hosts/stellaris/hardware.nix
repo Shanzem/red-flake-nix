@@ -1,7 +1,6 @@
 { config
 , lib
 , pkgs
-, inputs
 , ...
 }:
 {
@@ -334,13 +333,9 @@
     # TUXEDO-specific: drivers, Keyboard lighting and fan control (from nixpkgs)
     tuxedo-drivers.enable = true;
     tuxedo-rs = {
-      # Important: disable tuxedo-rs and tailor-gui to avoid conflict with tuxedo-drivers and tuxedo-control-center
+      # Important: disable tuxedo-rs and tailor-gui to avoid conflict with tuxedo-drivers and ucc
       enable = lib.mkForce false;
       tailor-gui.enable = lib.mkForce false; # GUI for TUXEDO Control Center equivalent
-    };
-    tuxedo-control-center = {
-      enable = false; # Disable original TUXEDO Control Center via tuxedo-nixos
-      package = inputs.tuxedo-nixos.packages.x86_64-linux.default;
     };
   };
 

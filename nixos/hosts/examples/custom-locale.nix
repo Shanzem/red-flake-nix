@@ -7,7 +7,7 @@ let
   localeProfiles = import ../../shared/locale-profiles.nix { inherit lib; };
 in
 mkHost "desktop" {
-  hardwareConfig = ../t580/hardware.nix;
+  hardwareConfig = ../kvm/hardware.nix;
   hostname = "custom-workstation";
 
   # Custom locale configuration for a specific use case
@@ -26,8 +26,4 @@ mkHost "desktop" {
       LC_TIME = "en_AU.UTF-8";
     };
   };
-
-  extraModules = [
-    nixos-hardware.nixosModules.lenovo-thinkpad-t590
-  ];
 }

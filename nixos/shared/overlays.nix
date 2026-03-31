@@ -9,16 +9,8 @@ let
     # NUR overlay
     inputs.nur.overlays.default
 
-    # poetry2nix overlay
-    inputs.poetry2nix.overlays.default
-
     # redflake-packages overlay
     inputs.redflake-packages.overlays.default
-
-    # fix issues with samba4Full
-    (_: prev: {
-      samba4Full = prev.samba4Full.override { enableCephFS = false; }; # disable cephfs in order to get around issues with => fatal error: tommath.h: No such file or directory
-    })
   ];
 
   # Security tool overlays
@@ -70,14 +62,6 @@ let
 
     # Equibop: writable settings.json + opt-in speech-dispatcher
     (import ../overlays/equibop-overlay)
-
-    # Ghostty tip package
-    (final: _prev: {
-      ghostty = inputs.ghostty.packages.${final.stdenv.hostPlatform.system}.default;
-    })
-
-    # Ghostty: suppress noisy warnings in journald
-    #(import ../overlays/ghostty-overlay)
   ];
 in
 {
