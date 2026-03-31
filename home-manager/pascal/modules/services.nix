@@ -81,4 +81,39 @@ _:
   # obex.service is socket-activated by bluetooth when a file transfer is initiated.
   # It cannot be fully disabled via autostart - it will start on-demand when needed.
   # This is fine as it only runs during active Bluetooth file transfers.
+
+  # =============================================================================
+  # Masked services - fully disabled via systemd (autostart hide doesn't stop D-Bus activation)
+  # =============================================================================
+
+  # Mask AT-SPI D-Bus bus: Accessibility services bus
+  # The autostart desktop file only prevents session autostart, not D-Bus activation
+  systemd.user.services.at-spi-dbus-bus = {
+    Unit.Description = "Masked: AT-SPI D-Bus Bus";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "/run/current-system/sw/bin/true";
+      RemainAfterExit = true;
+    };
+  };
+
+  # Mask Geoclue agent: Location services
+  systemd.user.services.geoclue-agent = {
+    Unit.Description = "Masked: Geoclue Demo Agent";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "/run/current-system/sw/bin/true";
+      RemainAfterExit = true;
+    };
+  };
+
+  # Mask Plasma KAccess: Accessibility features
+  systemd.user.services.plasma-kaccess = {
+    Unit.Description = "Masked: Plasma Accessibility";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "/run/current-system/sw/bin/true";
+      RemainAfterExit = true;
+    };
+  };
 }

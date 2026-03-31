@@ -173,6 +173,9 @@
 
       # CPU thermal: aggressive idle injection (optional)
       "intel_powerclamp"
+
+      # Device mapper: not needed (using ZFS, not LVM/LUKS)
+      "dm_mod"
     ];
     kernelModules = [
       "kvm-intel"
