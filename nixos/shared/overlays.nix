@@ -6,11 +6,6 @@ let
     # Provide a non-deprecated `pkgs.system` attr for older overlays/modules.
     (_: prev: { inherit (prev.stdenv.hostPlatform) system; })
 
-    # Chaotic-Nyx overlay
-    (_: prev: {
-      chaoticPkgs = import inputs.chaotic { inherit (prev.stdenv.hostPlatform) system; };
-    })
-
     # NUR overlay
     inputs.nur.overlays.default
 

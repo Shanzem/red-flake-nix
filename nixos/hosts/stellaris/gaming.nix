@@ -14,10 +14,6 @@ in
     platformOptimizations
   ];
 
-  # Switch to mesa-git
-  #chaotic.mesa-git.fallbackSpecialisation = lib.mkForce false;
-  #chaotic.mesa-git.enable = lib.mkForce true;
-
   # Enable Steam
   programs.steam = {
     enable = true;
@@ -28,7 +24,6 @@ in
 
     extraCompatPackages = with pkgs; [
       proton-ge-bin
-      # chaoticPkgs.proton-cachyos  # TODO: fix package availability
     ];
 
     extest.enable = false;

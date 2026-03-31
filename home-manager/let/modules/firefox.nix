@@ -587,12 +587,6 @@
                     url = "https://lazamar.co.uk/nix-versions/";
                   }
                   {
-                    name = "Chaotic's Nyx";
-                    tags = [ "nixos" ];
-                    keyword = "nixos";
-                    url = "https://www.nyx.chaotic.cx/";
-                  }
-                  {
                     name = "NUR";
                     tags = [ "nixos" ];
                     keyword = "nixos";
