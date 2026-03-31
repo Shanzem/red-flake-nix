@@ -10,7 +10,6 @@ in
 {
   imports = with gaming.nixosModules; [
     # https://github.com/fufexan/nix-gaming#platform-optimizations
-    pipewireLowLatency
     platformOptimizations
   ];
 
@@ -101,16 +100,4 @@ in
     };
   };
 
-  # see https://github.com/fufexan/nix-gaming/#pipewire-low-latency
-  services.pipewire.lowLatency.enable = true;
-
-  environment.sessionVariables = {
-    MANGOHUD = "0";
-    OBS_VKCAPTURE = "1";
-    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
-    WINENTSYNC = "1"; # Enable ntsync for best compatibility/performance
-    WINEESYNC = "0"; # Disable esync to avoid conflicts
-    WINEFSYNC = "0"; # Disable fsync to avoid conflicts
-    WINE_CPU_TOPOLOGY = "8:0,1,2,3,4,5,6,7"; # Only use P-cores for Wine/Proton
-  };
 }
