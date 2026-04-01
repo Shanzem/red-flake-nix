@@ -2,6 +2,14 @@
 {
   imports = [
     ./hardware.nix
-    ./sysctl.nix
   ];
+
+  # Standard sysctl profile for VMs
+  custom.sysctl = {
+    enable = true;
+    profile = "standard";
+    ramGB = 8;
+    swappiness = 1;
+    qdisc = "fq";
+  };
 }

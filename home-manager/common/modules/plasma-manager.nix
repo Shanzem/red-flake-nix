@@ -1,3 +1,20 @@
 # Common plasma-manager configuration
-# This imports pascal's config as a base for users without custom plasma configs
-{ imports = [ ../../pascal/modules/plasma-manager.nix ]; }
+# Imports the shared base with default settings
+{ ... }:
+{
+  imports = [ ../../shared/plasma-manager-base.nix ];
+
+  custom.plasma = {
+    enable = true;
+    terminal = "ghostty";
+    wallpaperResolution = "auto";
+    keyboardLayout = "de";
+    enablePowerdevilService = true;
+    strictMode = true;
+    autoLock = true;
+    displayTimeouts = { turnOff = 900; dim = 600; };
+    disableBlur = true;
+    enableTripleBuffering = true;
+    hideBrowserIntegrationReminder = true;
+  };
+}

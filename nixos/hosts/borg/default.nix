@@ -2,7 +2,16 @@
 {
   imports = [
     ./hardware.nix
-    ./sysctl.nix
     ./packages.nix
   ];
+
+  # Standard sysctl profile for desktop with core dumps disabled
+  custom.sysctl = {
+    enable = true;
+    profile = "standard";
+    ramGB = 8;
+    swappiness = 1;
+    qdisc = "fq";
+    disableCoreDumps = true;
+  };
 }

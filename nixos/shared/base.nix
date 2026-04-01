@@ -35,9 +35,10 @@
     ../modules/xdg.nix
     ../modules/theming.nix
 
-    # System optimization and tools (host-specific performance tuning is imported per host)
+    # System optimization and tools
     ../modules/appimage.nix
     ../modules/tweaks.nix
+    ../modules/sysctl.nix
   ]
   # Conditionally import desktop modules
   ++

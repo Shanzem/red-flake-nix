@@ -1,138 +1,218 @@
-_:
+# Parameterized sysctl module with options for different host profiles
+{ config
+, lib
+, ...
+}:
+let
+  cfg = config.custom.sysctl;
 
-{
-  # Increase systemd limits
-  systemd.settings.Manager = {
-    DefaultLimitNOFILE = 1048576;
-    DefaultLimitNPROC = 1048576;
-  };
+  # Network buffer sizes scaled by RAM
+  # Base: 64MB max for 8GB, scale proportionally
+  networkBufferMax =
+    if cfg.ramGB >= 96 then 134217728  # 128 MB
+    else if cfg.ramGB >= 32 then 67108864  # 64 MB
+    else 33554432; # 32 MB for smaller systems
 
-  # Set user limits
-  security.pam.loginLimits = [
-    { domain = "*"; type = "soft"; item = "nofile"; value = "1048576"; }
-    { domain = "*"; type = "hard"; item = "nofile"; value = "1048576"; }
-    { domain = "*"; type = "soft"; item = "nproc"; value = "1048576"; }
-    { domain = "*"; type = "hard"; item = "nproc"; value = "1048576"; }
-  ];
-  boot.kernel.sysctl = {
-    # Set sysctl parameters
-
-    # Set swappiness to only swap if you really have to
-    # The sysctl swappiness parameter determines the kernel's preference for pushing anonymous pages or page cache to disk in memory-starved situations.
-    # A low value causes the kernel to prefer freeing up open files (page cache), a high value causes the kernel to try to use swap space,
-    # and a value of 100 means IO cost is assumed to be equal.
-    "vm.swappiness" = 1;
+  # Standard sysctl settings shared across all profiles
+  standardSysctls = {
+    # Swappiness - low for standard, high for ZRAM
+    "vm.swappiness" = cfg.swappiness;
 
     # Adjust cache pressure
-    # The value controls the tendency of the kernel to reclaim the memory which is used for caching of directory and inode objects (VFS cache).
-    # Lowering it from the default value of 100 makes the kernel less inclined to reclaim VFS cache (do not set it to 0, this may produce out-of-memory conditions)
     "vm.vfs_cache_pressure" = 30;
 
-    # Contains, as a bytes of total available memory that contains free pages and reclaimable
-    # pages, the number of pages at which a process which is generating disk writes will itself start
-    # writing out dirty data.
+    # Dirty page settings
     "vm.dirty_bytes" = 1073741824; # 1 GB
-
-    # Optimize storage related settings
-    # Contains, as a bytes of total available memory that contains free pages and reclaimable
-    # pages, the number of pages at which the background kernel flusher threads will start writing out
-    # dirty data.
     "vm.dirty_background_bytes" = 268435456; # 256M
-
-    # The kernel flusher threads will periodically wake up and write old data out to disk.
-    # This tunable expresses the interval between those wakeups, in 100'ths of a second (Default is 500).
     "vm.dirty_writeback_centisecs" = 1000; # 10 seconds
 
-    # page-cluster controls the number of pages up to which consecutive pages are read in from swap in a single attempt.
-    # This is the swap counterpart to page cache readahead. The mentioned consecutivity is not in terms of virtual/physical addresses,
-    # but consecutive on swap space - that means they were swapped out together. (Default is 3)
-    # increase this value to 1 or 2 if you are using physical swap (1 if ssd, 2 if hdd)
-    "vm.page-cluster" = 0; # Set to 0 for SSD
+    # Page cluster - 0 for SSD
+    "vm.page-cluster" = 0;
 
     # Allow unprivileged users to bind ports below 1024
     "net.ipv4.ip_unprivileged_port_start" = 0;
 
-    # Increase max_user_watches
-    # Defines the maximum number of file watches that can be registered.
+    # File system limits
     "fs.inotify.max_user_watches" = 1048576;
-
-    # Set size of file handles and inode cache
-    # Sets the maximum number of file descriptors that can be allocated.
     "fs.file-max" = 4194304;
+    "fs.aio-max-nr" = 1000000;
 
-    # Defines the maximum number of asynchronous I/O requests that can be in progress at a given time.
-    "fs.aio-max-nr" = 1000000; # 1 million
-
-    # Disable core dumps
-    # Redirect core dumps to /dev/null to disable them.
-    #"kernel.core_pattern" = "/dev/null";
-
-    # Increase the sched_rt_runtime_us to mitigate issues:
-    # sched: RT throttling activated
-    # Defines the time (in microseconds) that real-time tasks can run without being throttled.
+    # Scheduler settings
     "kernel.sched_rt_runtime_us" = 980000;
-
-    # Enable the sysctl setting kernel.unprivileged_userns_clone to allow normal users to run unprivileged containers.
     "kernel.unprivileged_userns_clone" = 1;
-
-    # Hide any kernel messages from the console
-    # Adjust the console log level to suppress messages.
     "kernel.printk" = "3 3 3 3";
-
-    # Disable Kexec, which allows replacing the current running kernel.
-    # Enhances security by preventing kernel replacement.
     "kernel.kexec_load_disabled" = 1;
-
-    # Increase the maximum connections
-    # The upper limit on how many connections the kernel will accept (default 4096 since kernel version 5.6):
-    "net.core.somaxconn" = 8192;
-
-    # Enable SysRQ for rebooting the machine properly if it freezes.
-    # Useful for emergency recovery.
     "kernel.sysrq" = 1;
-
-    # Allows a large number of processes and threads to be managed
-    # Sets the maximum number of process IDs that can be allocated.
     "kernel.pid_max" = 262144;
 
-    # Help prevent packet loss during high traffic periods.
-    # Defines the maximum number of packets that can be queued on the network device input queue.
+    # Network settings
+    "net.core.somaxconn" = 8192;
     "net.core.netdev_max_backlog" = 65536;
-
-    # Default socket receive buffer size, improve network performance & applications that use sockets. Adjusted for 8GB RAM.
-    "net.core.rmem_default" = 1048576; # 1 MB
-
-    # Maximum socket receive buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 8GB RAM.
-    "net.core.rmem_max" = 67108864; # 64 MB
-
-    # Default socket send buffer size, improve network performance & applications that use sockets. Adjusted for 8GB RAM.
-    "net.core.wmem_default" = 1048576; # 1 MB
-
-    # Maximum socket send buffer size, determine the amount of data that can be buffered in memory for network operations. Adjusted for 8GB RAM.
-    "net.core.wmem_max" = 67108864; # 64 MB
-
-    # Reduce the chances of fragmentation. Adjusted for SSD.
-    # NOTE: correct key name is *_thresh (not *_threshold).
-    "net.ipv4.ipfrag_high_thresh" = 5242880; # 5 MB
-
-    # Enable TCP window scaling
-    # Allows the TCP window size to grow beyond its default maximum value.
+    "net.core.rmem_default" = 1048576;
+    "net.core.rmem_max" = networkBufferMax;
+    "net.core.wmem_default" = 1048576;
+    "net.core.wmem_max" = networkBufferMax;
+    "net.ipv4.ipfrag_high_thresh" = 5242880;
     "net.ipv4.tcp_window_scaling" = 1;
-
-    # TCP read memory settings: minimum, default, and maximum buffer size
-    # These settings define the memory reserved for TCP read operations.
     "net.ipv4.tcp_rmem" = "4096 87380 67108864";
-
-    # TCP write memory settings: minimum, default, and maximum buffer size
-    # These settings define the memory reserved for TCP write operations.
     "net.ipv4.tcp_wmem" = "4096 65536 67108864";
-
-    # Use the BBR congestion control algorithm for improved network performance
-    # BBR optimizes for low latency and high throughput.
     "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = cfg.qdisc;
+  };
 
-    # Use Fair Queueing (FQ) as the default queuing discipline
-    # FQ helps to reduce latency and improve overall network performance.
-    "net.core.default_qdisc" = "fq";
+  # Core dumps setting
+  coreDumpSysctl = lib.optionalAttrs cfg.disableCoreDumps {
+    "kernel.core_pattern" = "/dev/null";
+  };
+
+  # ZRAM optimizations (high swappiness already set via cfg.swappiness)
+  zramSysctls = lib.optionalAttrs cfg.enableZRAMOptimizations {
+    # Reserve free RAM for UI bursts (512 MiB for high-RAM systems)
+    "vm.min_free_kbytes" = if cfg.ramGB >= 64 then 524288 else 262144;
+  };
+
+  # Gaming/workstation tweaks
+  gamingSysctls = lib.optionalAttrs cfg.enableGamingTweaks {
+    # Increase max memory map areas - required by many games and Electron apps
+    "vm.max_map_count" = 1048576;
+    # Disable proactive memory compaction to avoid latency spikes
+    "vm.compaction_proactiveness" = 0;
+    # Disable zone reclaim for desktop
+    "vm.zone_reclaim_mode" = 0;
+    # Disable NUMA balancing (single-socket system)
+    "kernel.numa_balancing" = 0;
+    # Disable sched autogroup for scx
+    "kernel.sched_autogroup_enabled" = 0;
+  };
+
+  # Advanced networking tweaks
+  advancedNetworkingSysctls = lib.optionalAttrs cfg.enableAdvancedNetworking {
+    # TIME-WAIT assassination protection
+    "net.ipv4.tcp_rfc1337" = 1;
+    # Shorter FIN timeout
+    "net.ipv4.tcp_fin_timeout" = 30;
+    # Wider ephemeral port range
+    "net.ipv4.ip_local_port_range" = "15000 65535";
+    # Log weird source addresses
+    "net.ipv4.conf.all.log_martians" = 1;
+    "net.ipv4.conf.default.log_martians" = 1;
+    # TCP Fast Open
+    "net.ipv4.tcp_fastopen" = 3;
+    # MTU probing
+    "net.ipv4.tcp_mtu_probing" = 1;
+  };
+
+  # Security hardening
+  securitySysctls = lib.optionalAttrs cfg.enableSecurityHardening {
+    # Hide kernel pointers
+    "kernel.kptr_restrict" = 2;
+    # Watchdog settings
+    "kernel.nmi_watchdog" = 1;
+    "kernel.watchdog" = 1;
+    # Panic on oops
+    "kernel.panic_on_oops" = 1;
+  };
+in
+{
+  options.custom.sysctl = {
+    enable = lib.mkEnableOption "custom sysctl settings";
+
+    profile = lib.mkOption {
+      type = lib.types.enum [ "standard" "workstation" ];
+      default = "standard";
+      description = ''
+        Sysctl profile to use:
+        - standard: Basic optimized settings for VMs and servers
+        - workstation: Full desktop/gaming optimizations (enables gaming tweaks, THP, advanced networking)
+      '';
+    };
+
+    ramGB = lib.mkOption {
+      type = lib.types.int;
+      default = 8;
+      description = "System RAM in GB, used for scaling network buffers.";
+    };
+
+    swappiness = lib.mkOption {
+      type = lib.types.int;
+      default = 1;
+      description = "Swappiness value. Set high (100) for ZRAM systems.";
+    };
+
+    qdisc = lib.mkOption {
+      type = lib.types.enum [ "fq" "cake" ];
+      default = "fq";
+      description = "Default network queuing discipline.";
+    };
+
+    disableCoreDumps = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Disable core dumps by redirecting to /dev/null.";
+    };
+
+    enableZRAMOptimizations = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable optimizations for ZRAM (high swappiness, min_free_kbytes).";
+    };
+
+    enableGamingTweaks = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable gaming/desktop tweaks (max_map_count, disable compaction, etc).";
+    };
+
+    enableTransparentHugepages = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable Transparent Hugepage and MGLRU sysfs settings.";
+    };
+
+    enableAdvancedNetworking = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable advanced networking (TCP Fast Open, MTU probing, etc).";
+    };
+
+    enableSecurityHardening = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable security hardening (kptr_restrict, watchdogs, panic_on_oops).";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    # Systemd limits
+    systemd.settings.Manager = {
+      DefaultLimitNOFILE = 1048576;
+      DefaultLimitNPROC = 1048576;
+    };
+
+    # PAM limits
+    security.pam.loginLimits = [
+      { domain = "*"; type = "soft"; item = "nofile"; value = "1048576"; }
+      { domain = "*"; type = "hard"; item = "nofile"; value = "1048576"; }
+      { domain = "*"; type = "soft"; item = "nproc"; value = "1048576"; }
+      { domain = "*"; type = "hard"; item = "nproc"; value = "1048576"; }
+    ];
+
+    # Sysfs settings for THP/MGLRU (not sysctls)
+    systemd.tmpfiles.rules = lib.mkIf cfg.enableTransparentHugepages [
+      # Transparent Huge Pages: prefer explicit madvise() (low-latency default)
+      "w /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise"
+      "w /sys/kernel/mm/transparent_hugepage/defrag - - - - madvise"
+      # Multi-Gen LRU: keep it enabled
+      "w /sys/kernel/mm/lru_gen/enabled - - - - 0x0007"
+    ];
+
+    # Combine all sysctl settings
+    boot.kernel.sysctl =
+      standardSysctls
+      // coreDumpSysctl
+      // zramSysctls
+      // gamingSysctls
+      // advancedNetworkingSysctls
+      // securitySysctls;
   };
 }

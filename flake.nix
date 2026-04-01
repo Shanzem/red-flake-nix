@@ -195,17 +195,7 @@
         { system, ... }:
         let
           # Shared nixpkgs config
-          sharedNixpkgsConfig = {
-            allowUnfree = true;
-            allowInsecurePredicate = _x: true;
-            allowInsecure = true;
-            # Fallback: explicit list in case allowInsecure doesn't work everywhere
-            permittedInsecurePackages = [
-              "python-2.7.18.8"
-              "python-2.7.18.12"
-              "openssl-1.1.1w"
-            ];
-          };
+          sharedNixpkgsConfig = import ./nixos/shared/nixpkgs-config.nix;
 
           # Import shared overlays
           sharedOverlays = import nixos/shared/overlays.nix { inherit inputs; };
@@ -274,17 +264,7 @@
           inherit (self) outputs;
 
           # Shared nixpkgs config used across all package sets
-          sharedNixpkgsConfig = {
-            allowUnfree = true;
-            allowInsecurePredicate = _x: true;
-            allowInsecure = true;
-            # Fallback: explicit list in case allowInsecure doesn't work everywhere
-            permittedInsecurePackages = [
-              "python-2.7.18.8"
-              "python-2.7.18.12"
-              "openssl-1.1.1w"
-            ];
-          };
+          sharedNixpkgsConfig = import ./nixos/shared/nixpkgs-config.nix;
 
           # Import shared overlays
           sharedOverlays = import nixos/shared/overlays.nix { inherit inputs; };

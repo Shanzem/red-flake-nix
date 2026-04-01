@@ -1,9 +1,17 @@
 # Common firefox configuration
-{ ...
-}:
+# Imports the shared base with default security settings
+{ ... }:
 {
-  # Import from existing user modules where this is already configured
-  imports = [
-    ../../pascal/modules/firefox.nix
-  ];
+  imports = [ ../../shared/firefox-base.nix ];
+
+  custom.firefox = {
+    enable = true;
+    profile = "security";
+    dnsProvider = "cloudflare";
+    processCount = 8;
+    aggressiveAcceleration = false;
+    enableScrollTuning = true;
+    enableAIBlocking = true;
+    bookmarks = import ./firefox-bookmarks.nix;
+  };
 }

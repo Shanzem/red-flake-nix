@@ -91,10 +91,10 @@ in
       # Pascal-specific modules
       ../common/modules/ssh-config.nix
       ../common/modules/ghostty.nix
-      ../common/modules/firefox.nix
+      ../pascal/modules/firefox.nix
       ../common/modules/equibop.nix
       ../common/modules/vscode.nix
-      ../common/modules/plasma-manager.nix
+      ../pascal/modules/plasma-manager.nix
       ../pascal/modules/ucc.nix
     ];
     packages = packages.base ++ packages.desktop ++ packages.gaming ++ packages.development;
