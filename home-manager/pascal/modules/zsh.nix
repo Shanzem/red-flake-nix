@@ -7,8 +7,9 @@
       # enable zsh
       enable = true;
 
-      # Enable zsh completion.
-      enableCompletion = true;
+      # Disable home-manager's compinit - NixOS /etc/zshrc already runs it
+      # Running compinit twice wastes ~200ms on startup
+      enableCompletion = false;
 
       # Enable zsh autosuggestions
       autosuggestion.enable = true;
@@ -118,6 +119,9 @@
                     _STARSHIP_LAST_DURATION=''${_STARSHIP_LAST_DURATION%.*}
                 fi
                 unset _MY_CMD_START_TIME
+
+                # Reload IP cache from file (background job may have updated it)
+                _load_ip_cache
 
                 _starship_build_prompt
             }

@@ -1,5 +1,13 @@
 { pkgs, ... }:
 {
+  # Enable Ghostty to auto-start at login (runs in background with no window)
+  # This makes subsequent terminal opens nearly instant via D-Bus
+  # We create the symlink directly since programs.ghostty.systemd.enable only
+  # installs the service file but doesn't enable it
+  xdg.configFile."systemd/user/graphical-session.target.wants/app-com.mitchellh.ghostty.service" = {
+    source = "${pkgs.ghostty}/share/systemd/user/app-com.mitchellh.ghostty.service";
+  };
+
   programs.ghostty = {
     enable = true;
 
@@ -71,8 +79,10 @@
       # bell
       #bell-feature = "system"; # Unknown option in current ghostty version
 
-      # async
-      async-backend = "epoll"; # Safer for Linux perf
+      # async backend: io_uring is more efficient and Ghostty's recommended default
+      # Note: May show high iowait in system monitors - this is cosmetic (kernel
+      # reporting quirk), not actual disk I/O or performance degradation
+      async-backend = "io_uring";
 
       # auto update
       auto-update = "off";
