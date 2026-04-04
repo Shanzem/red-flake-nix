@@ -20,20 +20,19 @@
       "--unpause-spider-and-scanner"
     ];
 
-    extensions = [
+    extensions = {
       # Loaded by default
-      "403-bypasser"
-      "json-web-tokens"
-      "js-miner"
-      "param-miner"
-      "wsdler"
+      "403-bypasser" = { };
+      "json-web-tokens" = { };
+      "js-miner" = { };
+      "param-miner" = { };
+      "wsdler" = { };
 
       # Installed but not loaded
-      {
-        package = "http-request-smuggler";
+      "http-request-smuggler" = {
         loaded = false;
-      }
-    ];
+      };
+    };
 
     # Settings that are deep-merged into the default config
     settings = {

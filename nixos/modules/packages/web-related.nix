@@ -7,7 +7,7 @@
     httrack
     updog
     (burpsuite.override { jdk = javaPackages.compiler.openjdk25; })
-    (inputs.burpsuitepro.packages.${system}.default.override { jdk = javaPackages.compiler.openjdk25; })
+    inputs.burpsuitepro.packages.${system}.default
     zap
     xssstrike
     xsser

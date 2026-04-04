@@ -813,10 +813,10 @@
     ];
     startupNotify = true;
 
-    # Important: make Plasma tie XWayland window to this launcher
+    # Note: StartupWMClass removed - Java doesn't support setting WM_CLASS externally
+    # Use KWin window rules to match by title instead
     settings = {
-      StartupWMClass = "burp-StartBurp"; # ← from KWin debug console
-      X-KDE-DesktopFileName = "burpsuitepro"; # forces grouping with the main launcher
+      X-KDE-DesktopFileName = "burpsuitepro";
     };
   };
 

@@ -175,6 +175,30 @@ in
       default = "opaque";
       description = "Panel opacity setting.";
     };
+
+    windowRules = lib.mkOption {
+      type = lib.types.listOf lib.types.attrs;
+      default = [
+        # BurpSuite Pro has a broken WM_CLASS (nix store path), so we force the desktopfile
+        {
+          description = "BurpSuite Professional window grouping";
+          match = {
+            window-types = [ "normal" ];
+            title = {
+              value = "Burp Suite Professional";
+              type = "substring";
+            };
+          };
+          apply = {
+            desktopfile = {
+              value = "burpsuitepro";
+              apply = "force";
+            };
+          };
+        }
+      ];
+      description = "KWin window rules for applications with broken WM_CLASS or custom behavior.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -204,6 +228,8 @@ in
       enable = true;
       overrideConfig = cfg.strictMode;
       immutableByDefault = cfg.strictMode;
+
+      window-rules = cfg.windowRules;
 
       workspace = {
         clickItemTo = "open";
