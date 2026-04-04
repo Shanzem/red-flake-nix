@@ -41,8 +41,11 @@
   ];
 
   # AI/Development tools
+  # NOTE: claude-code temporarily commented out - removed from nixpkgs due to leak
+  # https://github.com/NixOS/nixpkgs/pull/505911
+  # Re-enable once 2.1.90+ lands in nixos-unstable
   development = with pkgsUnstable; [
-    claude-code
+    # claude-code
     opencode
     codex
     gemini-cli-bin

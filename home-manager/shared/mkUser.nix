@@ -2,11 +2,12 @@
 { inputs
 , lib
 , pkgs
+, pkgsUnstable
 , homeDirectory
 , ...
 }:
 let
-  profiles = import ./profiles.nix { inherit inputs pkgs lib homeDirectory; };
+  profiles = import ./profiles.nix { inherit inputs pkgs pkgsUnstable lib homeDirectory; };
 in
 {
   # Create a user configuration from a profile

@@ -283,11 +283,11 @@
 
           # Import shared user helper (parametrized by pkgs to match host config)
           mkUserFor =
-            pkgs: homeDirectory:
+            pkgs: pkgsUnstable: homeDirectory:
             import ./home-manager/shared/mkUser.nix {
               inherit inputs;
               inherit (nixpkgs) lib;
-              inherit pkgs;
+              inherit pkgs pkgsUnstable;
               inherit homeDirectory;
             };
 
@@ -327,7 +327,7 @@
                 inherit pkgsUnstable;
               };
 
-              home-manager.users.${user} = (mkUserFor pkgs homeDirectory).mkUser profile (
+              home-manager.users.${user} = (mkUserFor pkgs pkgsUnstable homeDirectory).mkUser profile (
                 extraConfig
                 // {
                   homeConfig = {
