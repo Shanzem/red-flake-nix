@@ -16,22 +16,43 @@
         "type": "github"
       }
     },
-    "burpsuitepro": {
+    "burpsuite-nix": {
       "inputs": {
+        "home-manager": "home-manager",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1772862857,
-        "narHash": "sha256-qT/j4fC2GiTfCwYhpmY0ltuPl2NjYK2eDdC7d/wPeH0=",
-        "owner": "xiv3r",
-        "repo": "Burpsuite-Professional",
-        "rev": "417c54a857fd824d83ebc168d423d29fbcfb3d29",
+        "lastModified": 1775239784,
+        "narHash": "sha256-xHmAxg7bbgPYsIMC6CgkUQwsP4fbC6mQq0AgnwdzAFo=",
+        "owner": "Red-Flake",
+        "repo": "burpsuite-nix",
+        "rev": "f8dc08247313f44492adf0f1dae05caa9686d115",
         "type": "github"
       },
       "original": {
-        "owner": "xiv3r",
+        "owner": "Red-Flake",
+        "repo": "burpsuite-nix",
+        "type": "github"
+      }
+    },
+    "burpsuitepro": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1775242391,
+        "narHash": "sha256-v49LlyoIvlD0oXi2brjUs6cDqWAYDCxVWYqYBrK0/d4=",
+        "owner": "Red-Flake",
+        "repo": "Burpsuite-Professional",
+        "rev": "8ded0c03e26d0dbd9fa461c11ad2dcbaf92a0ba4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Red-Flake",
         "repo": "Burpsuite-Professional",
         "type": "github"
       }
@@ -348,6 +369,27 @@
     "home-manager": {
       "inputs": {
         "nixpkgs": [
+          "burpsuite-nix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1764135300,
+        "narHash": "sha256-5xOuutXM7UPTUcn3uDAD8UlPQsXmqPrX81cXoDOAGcA=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "f4cb25928fafa9ae68660fe71f730fc820a59028",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager_2": {
+      "inputs": {
+        "nixpkgs": [
           "nixpkgs"
         ]
       },
@@ -366,7 +408,7 @@
         "type": "github"
       }
     },
-    "home-manager_2": {
+    "home-manager_3": {
       "inputs": {
         "nixpkgs": [
           "impermanence",
@@ -389,7 +431,7 @@
     },
     "impermanence": {
       "inputs": {
-        "home-manager": "home-manager_2",
+        "home-manager": "home-manager_3",
         "nixpkgs": [
           "nixpkgs"
         ]
@@ -861,10 +903,11 @@
     "root": {
       "inputs": {
         "artwork": "artwork",
+        "burpsuite-nix": "burpsuite-nix",
         "burpsuitepro": "burpsuitepro",
         "darkmatter-grub-theme": "darkmatter-grub-theme",
         "flake-parts": "flake-parts",
-        "home-manager": "home-manager",
+        "home-manager": "home-manager_2",
         "impermanence": "impermanence",
         "nix-alien": "nix-alien",
         "nix-cachyos-kernel": "nix-cachyos-kernel",

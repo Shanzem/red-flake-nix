@@ -49,6 +49,7 @@ let
 
   # Security tool modules
   securityModules = [
+    inputs.burpsuite-nix.homeManagerModules.default
     ../common/modules/msf.nix
     ../common/modules/bloodhound.nix
     ../common/modules/burpsuite.nix

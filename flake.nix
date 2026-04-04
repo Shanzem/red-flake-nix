@@ -126,12 +126,14 @@
     # https://hydra.lantian.pub/jobset/lantian/nix-cachyos-kernel
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
-    # https://github.com/xiv3r/Burpsuite-Professional
-    burpsuitepro = {
-      type = "github";
-      owner = "xiv3r";
-      repo = "Burpsuite-Professional";
+    burpsuite-nix = {
+      url = "github:Red-Flake/burpsuite-nix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    burpsuitepro = {
+      url = "github:Red-Flake/Burpsuite-Professional";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # Red-Flake artwork

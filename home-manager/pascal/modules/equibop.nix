@@ -1,5 +1,5 @@
 { lib
-, pkgsUnstable
+, pkgs
 , ...
 }:
 {
@@ -15,7 +15,7 @@
     # Enable and configure Equibop
     equibop = {
       enable = lib.mkDefault true;
-      package = lib.mkDefault pkgsUnstable.equibop;
+      package = lib.mkDefault pkgs.equibop;
       autoscroll.enable = true;
     };
 
@@ -52,7 +52,7 @@
         #reverseImageSearch.enable = true; # Adds ImageSearch to image context menus
 
         # Premium Features
-        fakeNitro.enable = true; # Enables Stickers, and 4k streams
+        #fakeNitro.enable = true; # Enables Stickers, and 4k streams
         volumeBooster.enable = true; # Allows you to set the user and stream volume above the default maximum
         webScreenShareFixes.enable = true; # Removes 2500kbps bitrate cap on chromium and vesktop clients
         youtubeAdblock.enable = true; # Block ads in YouTube embeds and the WatchTogether activity via AdGuard
