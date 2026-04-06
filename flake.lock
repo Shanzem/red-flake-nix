@@ -24,11 +24,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775321026,
-        "narHash": "sha256-o2W9UGnWYOywFN0azyDmOY5nASWwQIYwGBVRpXV0G20=",
+        "lastModified": 1775381872,
+        "narHash": "sha256-y0oWxpFoc55Cug3m455dFr7PYhVo3Xq8C1iZtVoPhEA=",
         "owner": "Red-Flake",
         "repo": "burpsuite-nix",
-        "rev": "dd2021a9ccb888720fcd294717e0318b98621994",
+        "rev": "8d78b284e06e94cb45c656fe967f115f7013dbe8",
         "type": "github"
       },
       "original": {
@@ -44,11 +44,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775323579,
-        "narHash": "sha256-QNJN5A2KPZosXPrC04NzFDPw3ajYPPqaAMNJ/AQMAQI=",
+        "lastModified": 1775402115,
+        "narHash": "sha256-vSE0DwiIS/hklOUAcjrnPxSB/LP+0q5Xx93o+pD5cW4=",
         "owner": "Red-Flake",
         "repo": "Burpsuite-Professional",
-        "rev": "e5cd64d416dd8fe46f9e2aa1f7cd07c5410bdf38",
+        "rev": "bf817ddfa5007c3a86940dff4996585c8b3cd252",
         "type": "github"
       },
       "original": {

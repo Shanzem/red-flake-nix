@@ -803,7 +803,7 @@
   xdg.desktopEntries."burpsuitepro" = {
     name = "BurpSuite Professional";
     genericName = "An integrated platform for performing security testing of web applications";
-    exec = "burpsuitepro %F"; # keep the actual launcher; add %F for files
+    exec = "env _JAVA_AWT_WM_NONREPARENTING=1 burpsuitepro -nosplash %F"; # keep the actual launcher; add %F for files
     icon = "burpsuitepro";
     type = "Application";
     categories = [
