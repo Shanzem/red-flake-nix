@@ -12,7 +12,6 @@
       ./base.nix
 
       # Security-specific modules
-      ../modules/setup-burp.nix
       ../modules/setup-neo4j.nix
       ../modules/wireshark.nix
       ../modules/proxies.nix
