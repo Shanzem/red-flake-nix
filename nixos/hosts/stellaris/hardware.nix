@@ -472,7 +472,7 @@
     #KWIN_FORCE_SW_CURSOR = "1";
     # NOTE: KWIN_DRM_DEVICES is ':'-separated; don't use /dev/dri/by-path/* (they contain ':' in the PCI address).
     # Intel iGPU (0000:00:02.0) first, NVIDIA dGPU (0000:02:00.0) second.
-    KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";
+    #KWIN_DRM_DEVICES = "/dev/dri/card-intel:/dev/dri/card-nvidia";
   };
 
   # Suppress KWin DRM warnings via Qt logging config file
@@ -506,4 +506,52 @@
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:00:02.0", SYMLINK+="dri/card-intel"
     SUBSYSTEM=="drm", KERNEL=="card*", KERNELS=="0000:02:00.0", SYMLINK+="dri/card-nvidia"
   '';
+
+  # Dynamic KWIN_DRM_DEVICES: only add NVIDIA GPU when an external display is connected to it.
+  # This avoids cross-GPU buffer sharing overhead and "atomic commit failed" log spam
+  # when only the internal Intel display is in use.
+  # Runs before plasma-kwin_wayland.service via systemd user environment.
+  environment.etc."profile.d/kwin-gpu-detect.sh".text = ''
+    # Detect if any NVIDIA-wired connector (HDMI/DP) has a display plugged in.
+    # card0 = NVIDIA (0x10de), card1 = Intel (0x8086) on this machine.
+    # Uses stable symlinks: /dev/dri/card-intel, /dev/dri/card-nvidia
+    _nv_connected=0
+    for _conn in /sys/class/drm/card0-*; do
+      [ -f "$_conn/status" ] && [ "$(cat "$_conn/status" 2>/dev/null)" = "connected" ] && _nv_connected=1
+    done
+
+    if [ "$_nv_connected" = "1" ]; then
+      export KWIN_DRM_DEVICES="/dev/dri/card-intel:/dev/dri/card-nvidia"
+    else
+      export KWIN_DRM_DEVICES="/dev/dri/card-intel"
+    fi
+    unset _nv_connected _conn
+  '';
+
+  # Also set it for the systemd user session so plasma-kwin_wayland.service picks it up.
+  # profile.d scripts only run for login shells; KWin is launched by systemd, not a shell.
+  systemd.user.services.kwin-gpu-detect = {
+    description = "Detect NVIDIA external displays for KWin DRM device selection";
+    wantedBy = [ "graphical-session-pre.target" ];
+    before = [ "plasma-kwin_wayland.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "kwin-gpu-detect" ''
+        nv_connected=0
+        for conn in /sys/class/drm/card0-*; do
+          if [ -f "$conn/status" ] && [ "$(cat "$conn/status" 2>/dev/null)" = "connected" ]; then
+            nv_connected=1
+            break
+          fi
+        done
+
+        if [ "$nv_connected" = "1" ]; then
+          ${pkgs.systemd}/bin/systemctl --user set-environment KWIN_DRM_DEVICES=/dev/dri/card-intel:/dev/dri/card-nvidia
+        else
+          ${pkgs.systemd}/bin/systemctl --user set-environment KWIN_DRM_DEVICES=/dev/dri/card-intel
+        fi
+      '';
+    };
+  };
 }
