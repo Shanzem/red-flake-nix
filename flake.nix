@@ -46,12 +46,6 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    # Have a local index of nixpkgs for fast launching of apps
-    nix-index-database = {
-      url = "github:nix-community/nix-index-database";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Home configuration management
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
