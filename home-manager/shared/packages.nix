@@ -34,6 +34,7 @@
     heroic
     itch
     ludusavi
+    prismlauncher
     # Wine
     winetricks
     wineWow64Packages.waylandFull
