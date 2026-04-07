@@ -546,12 +546,6 @@ in
         SearchBar = "unified";
         OfferToSaveLogins = false;
 
-        # Certificates
-        Certificates = {
-          ImportEnterpriseRoots = true;
-          Install = [ "${config.home.homeDirectory}/.BurpSuite/cacert.der" ];
-        };
-
         # Extensions
         ExtensionSettings =
           baseExtensions
