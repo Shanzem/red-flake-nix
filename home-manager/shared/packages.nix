@@ -32,7 +32,7 @@
     protonup-qt
     protonup-ng
     heroic
-    # itch  # itch fails to build...
+    itch
     ludusavi
     # Wine
     winetricks
