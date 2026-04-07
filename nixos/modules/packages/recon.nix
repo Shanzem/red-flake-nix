@@ -11,7 +11,6 @@
     wafw00f
     nikto
     davtest
-    joomscan
     whatweb
     onesixtyone
     whois

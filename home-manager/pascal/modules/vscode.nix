@@ -141,15 +141,6 @@
           "workbench.enableExperiments" = false;
         };
 
-        # set keybindings
-        # keybindings = [
-        #   # See https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
-        #   {
-        #       key = "shift+cmd+j";
-        #       command = "workbench.action.focusActiveEditorGroup";
-        #       when = "terminalFocus";
-        #   }
-        # ];
       };
     };
 

@@ -41,9 +41,6 @@ in
     };
 
     config = {
-      #themeLinks = [
-      #  "https://capnkitten.github.io/BetterDiscord/Themes/Material-Discord/css/source.css"
-      #];
       plugins = {
         # General Tweaks
         alwaysTrust.enable = true; # Removes the annoying untrusted domain and suspicious file popup

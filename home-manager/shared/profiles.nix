@@ -16,44 +16,44 @@ let
   coreModules = [
     ./base.nix
     ../common/modules/git.nix
-    ../common/modules/zsh.nix
+    ../pascal/modules/zsh.nix
     ../common/modules/fastfetch.nix
-    ../common/modules/ssh-agent.nix
-    ../common/modules/starship.nix
+    ../pascal/modules/ssh-agent.nix
+    ../pascal/modules/starship.nix
   ];
 
   # Base modules for desktop profiles (adds flatpak to core)
   # Note: ssh-config.nix is added per-profile since letgamer has a custom version
   baseDesktopModules = coreModules ++ [
-    ../common/modules/flatpak.nix
+    ../pascal/modules/flatpak.nix
   ];
 
   # Desktop environment modules (KDE Plasma, theming, etc.)
   desktopEnvModules = [
     inputs.plasma-manager.homeModules.plasma-manager
     inputs.nixcord.homeModules.nixcord
-    ../common/modules/dconf.nix
-    ../common/modules/artwork.nix
-    ../common/modules/theme.nix
-    ../common/modules/kwallet.nix
-    ../common/modules/konsole.nix
-    ../common/modules/psd.nix
-    ../common/modules/virtualisation.nix
-    ../common/modules/desktop-files.nix
-    ../common/modules/xdg.nix
-    ../common/modules/bat.nix
-    ../common/modules/services.nix
-    ../common/modules/direnv.nix
-    ../common/modules/filezilla.nix
+    ../pascal/modules/dconf.nix
+    ../pascal/modules/artwork.nix
+    ../pascal/modules/theme.nix
+    ../pascal/modules/kwallet.nix
+    ../pascal/modules/konsole.nix
+    ../pascal/modules/psd.nix
+    ../pascal/modules/virtualisation.nix
+    ../pascal/modules/desktop-files.nix
+    ../pascal/modules/xdg.nix
+    ../pascal/modules/bat.nix
+    ../pascal/modules/services.nix
+    ../pascal/modules/direnv.nix
+    ../pascal/modules/filezilla.nix
   ];
 
   # Security tool modules
   securityModules = [
     inputs.burpsuite-nix.homeManagerModules.default
-    ../common/modules/msf.nix
-    ../common/modules/bloodhound.nix
-    ../common/modules/burpsuite.nix
-    ../common/modules/jadx.nix
+    ../pascal/modules/msf.nix
+    ../pascal/modules/bloodhound.nix
+    ../pascal/modules/burpsuite.nix
+    ../pascal/modules/jadx.nix
   ];
 
   # Full desktop profile modules (base + desktop env + security)
@@ -91,10 +91,10 @@ in
     modules = fullDesktopModules ++ [
       # Pascal-specific modules
       ../common/modules/ssh-config.nix
-      ../common/modules/ghostty.nix
+      ../pascal/modules/ghostty.nix
       ../pascal/modules/firefox.nix
-      ../common/modules/equibop.nix
-      ../common/modules/vscode.nix
+      ../pascal/modules/equibop.nix
+      ../pascal/modules/vscode.nix
       ../pascal/modules/plasma-manager.nix
       ../pascal/modules/ucc.nix
     ];
@@ -145,10 +145,10 @@ in
     modules = fullDesktopModules ++ [
       # Shanzem-specific modules
       ../common/modules/ssh-config.nix
-      ../common/modules/ghostty.nix
+      ../pascal/modules/ghostty.nix
       ../common/modules/firefox.nix
-      ../common/modules/equibop.nix
-      ../common/modules/vscode.nix
+      ../pascal/modules/equibop.nix
+      ../pascal/modules/vscode.nix
       ../shanzem/modules/plasma-manager.nix
     ];
     packages = packages.base ++ packages.desktop ++ packages.gaming ++ packages.development;
@@ -167,8 +167,8 @@ in
       # Redflake-specific modules
       ../common/modules/ssh-config.nix
       ../common/modules/firefox.nix
-      ../common/modules/vesktop.nix
-      ../common/modules/vscode.nix
+      ../pascal/modules/vesktop.nix
+      ../pascal/modules/vscode.nix
       ../common/modules/plasma-manager.nix
     ];
     packages = packages.base ++ packages.desktop ++ packages.gaming ++ packages.development;
@@ -184,9 +184,9 @@ in
     sessionVariables = { };
     sessionPath = commonSessionPath;
     modules = coreModules ++ [
-      ../common/modules/flatpak.nix
+      ../pascal/modules/flatpak.nix
       ../common/modules/ssh-config.nix
-      ../common/modules/msf.nix
+      ../pascal/modules/msf.nix
     ];
     packages = packages.base;
   };

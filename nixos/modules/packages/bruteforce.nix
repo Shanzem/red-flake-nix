@@ -15,7 +15,6 @@
     jwtcrack
     thc-hydra
     ncrack
-    gobuster
     python313Packages.dirsearch
     # python313Packages.patator # is marked as broken
     fcrackzip
