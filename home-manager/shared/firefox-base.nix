@@ -302,13 +302,13 @@ let
       install_url = "https://addons.mozilla.org/firefox/downloads/latest/google-sign-in-popup-blocker/latest.xpi";
       installation_mode = "force_installed";
     };
-    "PwnFoxy@la1n23.lol" = {
+    "PwnFox@bi.tk" = {
       install_url = "https://addons.mozilla.org/firefox/downloads/latest/pwnfox/latest.xpi";
       installation_mode = "force_installed";
       default_area = "navbar";
     };
-    "magnolia_limited_permissions@12.34" = {
-      install_url = "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=bypass_paywalls_clean-4.2.3.0-custom.xpi";
+    "magnolia@12.34" = {
+      install_url = "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=bypass_paywalls_clean-latest.xpi";
       installation_mode = "force_installed";
     };
   };
