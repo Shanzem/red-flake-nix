@@ -1,9 +1,7 @@
-# Fix bright/oversaturated colors on Wayland with wide-gamut displays
-# Wraps Electron apps with --disable-features=WaylandWpColorManagerV1
-# This fixes buggy Wayland color management protocol implementation
-# that causes color issues with Intel Mesa Xe driver
+# Fix Vesktop Electron crashes and speech-dispatcher issues on Wayland
 #
-# See: https://community.brave.app/t/washed-out-colors-when-hardware-acceleration-is-enabled/643668
+# - Disables speech-dispatcher to prevent SIGTRAP coredumps
+# - Forces X11 mode to prevent SIGILL coredumps with Electron 38
 
 _final: prev: {
   vesktop = prev.vesktop.overrideAttrs (oldAttrs: {
@@ -23,7 +21,7 @@ _final: prev: {
         --set NIXOS_SPEECH False \
         --set NIXOS_OZONE_WL 0 \
         --set ELECTRON_OZONE_PLATFORM_HINT x11 \
-        --add-flags "--disable-features=WaylandWpColorManagerV1 --disable-speech-api --disable-speech-synthesis-api"
+        --add-flags "--disable-speech-api --disable-speech-synthesis-api"
     '';
   });
 }
