@@ -549,7 +549,7 @@ in
         # Certificates
         Certificates = {
           ImportEnterpriseRoots = true;
-          Install = [ "/etc/ssl/certs/BurpSuiteCA.der" ];
+          Install = [ "${config.home.homeDirectory}/.BurpSuite/cacert.der" ];
         };
 
         # Extensions
