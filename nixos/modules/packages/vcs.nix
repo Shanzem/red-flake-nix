@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   # List packages installed in system profile. To search, run:
@@ -6,5 +6,6 @@
   environment.systemPackages = with pkgs; [
     gitFull
     git-dumper
+    inputs.redflake-packages.packages.x86_64-linux.gitlab-version
   ];
 }
