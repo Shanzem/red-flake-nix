@@ -7,5 +7,6 @@
     gitFull
     git-dumper
     inputs.redflake-packages.packages.x86_64-linux.gitlab-version
+    inputs.redflake-packages.packages.x86_64-linux.gitlab-userenum
   ];
 }
